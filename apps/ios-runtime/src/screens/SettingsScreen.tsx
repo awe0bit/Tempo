@@ -29,8 +29,8 @@ export function SettingsScreen({ theme, snapshot, perform }: { theme: TempoTheme
     colors: {
       ...navigationThemeBase.colors,
       primary: theme.accent,
-      background: theme.groupedBackground,
-      card: theme.groupedBackground,
+      background: theme.background,
+      card: theme.background,
       text: theme.text,
       border: theme.separator,
       notification: theme.accent,
@@ -39,8 +39,8 @@ export function SettingsScreen({ theme, snapshot, perform }: { theme: TempoTheme
 
   return <NavigationContainer theme={navigationTheme}>
     <Stack.Navigator screenOptions={{
-      contentStyle: { backgroundColor: theme.groupedBackground },
-      headerStyle: { backgroundColor: theme.groupedBackground },
+      contentStyle: { backgroundColor: theme.background },
+      headerStyle: { backgroundColor: theme.background },
       headerTintColor: theme.accent,
       headerTitleAlign: 'center',
       headerTitleStyle: { color: theme.text, fontSize: 17, fontWeight: '700' },
@@ -62,7 +62,7 @@ export function SettingsScreen({ theme, snapshot, perform }: { theme: TempoTheme
 }
 
 function SettingsHome({ theme, snapshot, openPage }: { theme: TempoTheme; snapshot: TempoSnapshot; openPage: (page: Page) => void }) {
-  return <Screen theme={theme} backgroundColor={theme.groupedBackground}>
+  return <Screen theme={theme} backgroundColor={theme.background}>
     <ScrollView style={styles.scroll} alwaysBounceVertical contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
       <Section theme={theme}>
         <SettingRow theme={theme} icon="arrow.triangle.2.circlepath" title={t('settings.sync')} onPress={() => openPage('sync')} /><Divider theme={theme} inset={68} />
@@ -123,7 +123,7 @@ function DetailPage({ navigation, page, theme, snapshot, perform, message, setMe
   }, [navigation, transition.closing, transition.progress]);
   const content = page === 'sync' ? <SyncSettings theme={theme} value={snapshot.sync} perform={perform} setMessage={setMessage} /> : page === 'ai' ? <AISettings theme={theme} value={snapshot.ai} perform={perform} setMessage={setMessage} /> : page === 'focus' ? <FocusSettings theme={theme} value={snapshot.pomodoro} perform={perform} /> : page === 'appearance' ? <AppearanceSettings theme={theme} value={snapshot.preferences?.appearance} perform={perform} /> : page === 'calendar' ? <CalendarSettings theme={theme} value={snapshot.preferences} perform={perform} /> : page === 'modules' ? <ModuleSettings theme={theme} value={snapshot.preferences?.moduleOrder} supportsSelectionFeedback={snapshot.capabilities?.includes('feedback.selection') ?? false} perform={perform} /> : <AboutSettings theme={theme} value={snapshot.app} perform={perform} setMessage={setMessage} />;
 
-  return <Screen theme={theme} backgroundColor={theme.groupedBackground}><KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>{page === 'modules' ? <View style={styles.modulePage}>{content}</View> : <ScrollView style={styles.scroll} alwaysBounceVertical contentInsetAdjustmentBehavior="automatic" keyboardDismissMode="interactive" keyboardShouldPersistTaps="handled" contentContainerStyle={styles.detailContent}>{content}{message ? <Text style={[styles.message, { color: theme.secondary }]}>{message}</Text> : null}</ScrollView>}</KeyboardAvoidingView></Screen>;
+  return <Screen theme={theme} backgroundColor={theme.background}><KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>{page === 'modules' ? <View style={styles.modulePage}>{content}</View> : <ScrollView style={styles.scroll} alwaysBounceVertical contentInsetAdjustmentBehavior="automatic" keyboardDismissMode="interactive" keyboardShouldPersistTaps="handled" contentContainerStyle={styles.detailContent}>{content}{message ? <Text style={[styles.message, { color: theme.secondary }]}>{message}</Text> : null}</ScrollView>}</KeyboardAvoidingView></Screen>;
 }
 function SyncSettings({ theme, value, perform, setMessage }: any) { const [serverURL, setServerURL] = useState(value?.serverURL ?? ''); const [deviceName, setDeviceName] = useState(value?.deviceName ?? 'iPhone'); const [token, setToken] = useState(''); const [autoSync, setAutoSync] = useState(value?.autoSync ?? true); async function save(test = false) { setMessage(test ? t('settings.testingConnection') : t('settings.saving')); try { const payload = { serverURL, deviceName, token, autoSync }; await perform(test ? 'sync.test' : 'sync.save', payload); setMessage(test ? t('settings.connectionSuccess') : t('settings.savedAutoSync')); } catch { setMessage(t('settings.connectionFailed')); } } return <><Section theme={theme} title={t('settings.server')}><Field theme={theme} label={t('settings.serverURL')} value={serverURL} onChange={setServerURL} placeholder="https://sync.example.com" /><Divider theme={theme} /><Field theme={theme} label={t('settings.deviceName')} value={deviceName} onChange={setDeviceName} /><Divider theme={theme} /><Field theme={theme} label={t('settings.token')} value={token} onChange={setToken} placeholder={value?.hasToken ? t('settings.tokenSavedPlaceholder') : t('settings.tokenPlaceholder')} secure /></Section><Section theme={theme}><ToggleRow theme={theme} title={t('settings.autoSync')} detail={t('settings.autoSyncDetail')} value={autoSync} onValueChange={setAutoSync} /><Divider theme={theme} /><Row theme={theme} title={t('settings.currentStatus')} detail={`${syncLabel(value?.phase, value?.pendingChangeCount ?? 0)} · revision ${value?.revision ?? 0}`} /></Section><Section theme={theme}><ActionRow theme={theme} title={t('settings.saveConfiguration')} onPress={() => save(false)} /><Divider theme={theme} /><ActionRow theme={theme} title={t('settings.testConnection')} onPress={() => save(true)} /><Divider theme={theme} /><ActionRow theme={theme} title={t('settings.syncNow')} onPress={() => perform('sync.now')} /></Section></>; }
 function AISettings({ theme, value, perform, setMessage }: any) {

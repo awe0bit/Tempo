@@ -37,7 +37,7 @@ export default function App(props: RuntimeProps) {
   }, [developerToolsVisible, foregroundOTA.checkNow]);
 
   return (
-    <SafeAreaProvider style={[styles.safeArea, { backgroundColor: route === 'settings' ? theme.groupedBackground : theme.background }]}>
+    <SafeAreaProvider style={[styles.safeArea, { backgroundColor: theme.background }]}>
       <StatusBar style={theme.dark ? 'light' : 'dark'} />
       {snapshot ? <RouteView tempo={tempo} /> : <View style={styles.loading}><ActivityIndicator color={theme.accent} /></View>}
       {error ? <Pressable accessibilityRole="button" accessibilityLabel={t('app.closeError')} onPress={clearError} style={({ pressed }) => [styles.toast, { backgroundColor: theme.dark ? theme.surfaceElevated : theme.text, borderColor: theme.dark ? theme.separator : 'transparent', opacity: pressed ? .82 : 1 }]}><Text numberOfLines={2} style={[styles.toastText, { color: theme.dark ? theme.text : theme.background }]}>{error}</Text><Text style={[styles.toastClose, { color: theme.dark ? theme.secondary : theme.background }]}>×</Text></Pressable> : null}
