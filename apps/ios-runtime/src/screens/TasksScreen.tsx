@@ -340,7 +340,7 @@ function CalendarStrip({ theme, selected, onSelect, progress, expanded, onExpand
   const gridHeight = progress.interpolate({ inputRange: [0, 1], outputRange: [42, 252] });
   const gridOffset = progress.interpolate({ inputRange: [0, 1], outputRange: [-selectedRow * 42, 0] });
   return (
-    <Animated.View style={[styles.calendar, { height, backgroundColor: theme.surface }]}>
+    <Animated.View style={[styles.calendar, { height, backgroundColor: theme.groupedSurface, borderColor: theme.cardBorder }]}>
       <View style={styles.weekdayRow}>{weekdayLabels().map((day) => <Text key={day} style={[styles.weekday, { color: theme.secondary }]}>{day}</Text>)}</View>
       <Animated.View style={[styles.calendarGridViewport, { height: gridHeight }]}>
         <Animated.View style={{ transform: [{ translateY: gridOffset }] }}>
@@ -487,7 +487,7 @@ function shortDate(value: string) { return formatDate(value, { month: 'numeric',
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  calendar: { overflow: 'hidden', marginTop: 10, marginHorizontal: 20, paddingHorizontal: 12, borderRadius: 22 },
+  calendar: { overflow: 'hidden', marginTop: 10, marginHorizontal: 18, paddingHorizontal: 12, borderRadius: 18, borderWidth: StyleSheet.hairlineWidth },
   weekdayRow: { height: 24, flexDirection: 'row', alignItems: 'center' },
   weekday: { flex: 1, textAlign: 'center', fontSize: 12, fontWeight: '500' },
   calendarGridViewport: { overflow: 'hidden' },
