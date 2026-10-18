@@ -487,7 +487,7 @@ function shortDate(value: string) { return formatDate(value, { month: 'numeric',
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  calendar: { overflow: 'hidden', marginHorizontal: 20, paddingHorizontal: 12, borderRadius: 22 },
+  calendar: { overflow: 'hidden', marginTop: 10, marginHorizontal: 20, paddingHorizontal: 12, borderRadius: 22 },
   weekdayRow: { height: 24, flexDirection: 'row', alignItems: 'center' },
   weekday: { flex: 1, textAlign: 'center', fontSize: 12, fontWeight: '500' },
   calendarGridViewport: { overflow: 'hidden' },
