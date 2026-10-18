@@ -31,6 +31,28 @@ export function DeveloperToolsContent({ theme, snapshot, foregroundOTA }: Props)
 
       <OTAProgress theme={theme} update={update} foregroundOTA={foregroundOTA} />
 
+      <Section theme={theme} title={t('dev.runtimeEnvironment')}>
+        <Row theme={theme} title={t('dev.source')} detail={Updates.isEmbeddedLaunch ? t('dev.embeddedSource') : t('dev.otaSource')} />
+        <Divider theme={theme} />
+        <Row theme={theme} title={t('dev.runtimeVersion')} detail={Updates.runtimeVersion ?? t('common.notAvailable')} />
+        <Divider theme={theme} />
+        <Row theme={theme} title={t('dev.channel')} detail={Updates.channel ?? 'production'} />
+      </Section>
+
+      <Section theme={theme} title={t('dev.dataSnapshot')}>
+        <View style={styles.metricRow}>
+          <Metric theme={theme} label={t('dev.localRevision')} value={`${snapshot.revision ?? 0}`} />
+          <View style={[styles.metricVerticalDivider, { backgroundColor: theme.separator }]} />
+          <Metric theme={theme} label={t('dev.taskCount')} value={`${snapshot.tasks.length}`} />
+        </View>
+        <Divider theme={theme} inset={0} />
+        <View style={styles.metricRow}>
+          <Metric theme={theme} label={t('dev.rssUnread')} value={`${snapshot.rss?.unreadCount ?? 0}`} />
+          <View style={[styles.metricVerticalDivider, { backgroundColor: theme.separator }]} />
+          <Metric theme={theme} label={t('dev.focusRecords')} value={`${snapshot.pomodoro?.focusHistory.length ?? 0}`} />
+        </View>
+      </Section>
+
       <Section theme={theme} title={t('dev.syncDiagnostics')}>
         <Row theme={theme} title={t('dev.status')} detail={syncLabel(sync?.phase, sync?.pendingChangeCount ?? 0)} />
         <Divider theme={theme} />
@@ -45,6 +67,10 @@ export function DeveloperToolsContent({ theme, snapshot, foregroundOTA }: Props)
       <Text style={[styles.versionMeta, { color: theme.tertiary }]}>{versionMeta}</Text>
     </ScrollView>
   );
+}
+
+function Metric({ theme, label, value }: { theme: TempoTheme; label: string; value: string }) {
+  return <View style={styles.metric}><Text style={[styles.metricValue, { color: theme.text }]}>{value}</Text><Text style={[styles.metricLabel, { color: theme.secondary }]}>{label}</Text></View>;
 }
 
 function OTAProgress({ theme, update, foregroundOTA }: { theme: TempoTheme; update: ReturnType<typeof Updates.useUpdates>; foregroundOTA: ForegroundOTAState }) {
@@ -136,6 +162,11 @@ const styles = StyleSheet.create({
   progressStages: { flexDirection: 'row', gap: 1, height: 7, borderRadius: 4, overflow: 'hidden', marginTop: 16 },
   progressStage: { flex: 1, height: 7, overflow: 'hidden' },
   progressStageFill: { height: 7, borderRadius: 4 },
+  metricRow: { minHeight: 72, flexDirection: 'row', alignItems: 'stretch' },
+  metric: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10, paddingVertical: 11 },
+  metricValue: { fontSize: 20, lineHeight: 25, fontWeight: '600', fontVariant: ['tabular-nums'] },
+  metricLabel: { fontSize: 12, lineHeight: 16, marginTop: 2, textAlign: 'center' },
+  metricVerticalDivider: { width: StyleSheet.hairlineWidth, marginVertical: 10 },
   note: { fontSize: 12.5, lineHeight: 18, marginHorizontal: 30, marginTop: 2 },
   versionMeta: { fontSize: 10.5, lineHeight: 15, textAlign: 'center', opacity: .62, marginHorizontal: 30, marginTop: 12 },
 });
