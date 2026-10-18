@@ -73,14 +73,14 @@ function OTAProgress({ theme, update, foregroundOTA }: { theme: TempoTheme; upda
           <Text style={[styles.progressPercent, { color: theme.secondary }]}>{progressPercent}%</Text>
         </View>
 
-        <View style={styles.progressStages}>
+        <View style={[styles.progressStages, { backgroundColor: theme.surfaceMuted }]}>
           {OTA_STAGE_RANGES.map(([start, end]) => {
             const stageWidth = animatedProgress.interpolate({
               inputRange: [start, end],
               outputRange: ['0%', '100%'],
               extrapolate: 'clamp',
             });
-            return <View key={start} style={[styles.progressStage, { backgroundColor: theme.surfaceMuted }]}>
+            return <View key={start} style={styles.progressStage}>
               <Animated.View style={[styles.progressStageFill, { width: stageWidth, backgroundColor: state.error ? theme.danger : theme.accent }]} />
             </View>;
           })}
@@ -133,8 +133,8 @@ const styles = StyleSheet.create({
   progressTitle: { fontSize: 16, lineHeight: 21, fontWeight: '600' },
   progressDetail: { fontSize: 12.5, lineHeight: 18, marginTop: 2 },
   progressPercent: { fontSize: 13, fontWeight: '600', fontVariant: ['tabular-nums'], marginLeft: 10 },
-  progressStages: { flexDirection: 'row', gap: 5, marginTop: 16 },
-  progressStage: { flex: 1, height: 7, borderRadius: 4, overflow: 'hidden' },
+  progressStages: { flexDirection: 'row', gap: 1, height: 7, borderRadius: 4, overflow: 'hidden', marginTop: 16 },
+  progressStage: { flex: 1, height: 7, overflow: 'hidden' },
   progressStageFill: { height: 7, borderRadius: 4 },
   note: { fontSize: 12.5, lineHeight: 18, marginHorizontal: 30, marginTop: 2 },
   versionMeta: { fontSize: 10.5, lineHeight: 15, textAlign: 'center', opacity: .62, marginHorizontal: 30, marginTop: 12 },

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated, Keyboard, LayoutAnimation, PanResponder, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
@@ -49,10 +49,11 @@ export function TasksScreen({ route, theme, tasks, supportsSelectionFeedback, co
     if (command) consumeCommand();
   }, [command, consumeCommand]);
 
-  function setCalendarExpanded(next: boolean) {
+  const setCalendarExpanded = useCallback((next: boolean) => {
+    calendar.stopAnimation();
     setCalendarExpandedState(next);
     Animated.spring(calendar, { toValue: next ? 1 : 0, useNativeDriver: false, stiffness: 210, damping: 28, mass: .78 }).start();
-  }
+  }, [calendar]);
 
   const scoped = useMemo(() => tasks
     .filter((task) => task.status !== 'cancelled')
@@ -323,19 +324,22 @@ function CalendarStrip({ theme, selected, onSelect, progress, expanded, onExpand
   const selectedIndex = Math.max(0, days.findIndex((date) => sameDay(date, selected)));
   const selectedRow = Math.floor(selectedIndex / 7);
   const dragStart = useRef(expanded ? 1 : 0);
+  const liveProgress = useRef(expanded ? 1 : 0);
+  useEffect(() => {
+    const listener = progress.addListener(({ value }) => { liveProgress.current = value; });
+    return () => progress.removeListener(listener);
+  }, [progress]);
+  const wantsVerticalDrag = (_: unknown, gesture: { dx: number; dy: number }) => Math.abs(gesture.dy) > 4 && Math.abs(gesture.dy) > Math.abs(gesture.dx) * 1.08;
   const pan = useMemo(() => PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: () => true,
+    onStartShouldSetPanResponder: () => false,
+    onMoveShouldSetPanResponder: wantsVerticalDrag,
+    onMoveShouldSetPanResponderCapture: wantsVerticalDrag,
     onPanResponderGrant: () => {
-      dragStart.current = expanded ? 1 : 0;
-      progress.stopAnimation(value => { dragStart.current = value; });
+      progress.stopAnimation();
+      dragStart.current = liveProgress.current;
     },
     onPanResponderMove: (_, gesture) => progress.setValue(Math.max(0, Math.min(1, dragStart.current + gesture.dy / 210))),
     onPanResponderRelease: (_, gesture) => {
-      if (Math.abs(gesture.dy) < 4 && Math.abs(gesture.dx) < 4) {
-        onExpandedChange(!expanded);
-        return;
-      }
       const position = Math.max(0, Math.min(1, dragStart.current + gesture.dy / 210));
       onExpandedChange(gesture.vy > .22 ? true : gesture.vy < -.22 ? false : position >= .5);
     },
@@ -344,12 +348,12 @@ function CalendarStrip({ theme, selected, onSelect, progress, expanded, onExpand
       const position = Math.max(0, Math.min(1, dragStart.current + gesture.dy / 210));
       onExpandedChange(position >= .5);
     },
-  }), [expanded, onExpandedChange, progress]);
+  }), [onExpandedChange, progress]);
   const height = progress.interpolate({ inputRange: [0, 1], outputRange: [88, 298] });
   const gridHeight = progress.interpolate({ inputRange: [0, 1], outputRange: [42, 252] });
   const gridOffset = progress.interpolate({ inputRange: [0, 1], outputRange: [-selectedRow * 42, 0] });
   return (
-    <Animated.View style={[styles.calendar, { height, backgroundColor: theme.groupedSurface, borderColor: theme.cardBorder }]}>
+    <Animated.View {...pan.panHandlers} style={[styles.calendar, { height, backgroundColor: theme.groupedSurface, borderColor: theme.cardBorder }]}>
       <View style={styles.weekdayRow}>{weekdayLabels().map((day) => <Text key={day} style={[styles.weekday, { color: theme.secondary }]}>{day}</Text>)}</View>
       <Animated.View style={[styles.calendarGridViewport, { height: gridHeight }]}>
         <Animated.View style={{ transform: [{ translateY: gridOffset }] }}>
@@ -357,14 +361,13 @@ function CalendarStrip({ theme, selected, onSelect, progress, expanded, onExpand
         </Animated.View>
       </Animated.View>
       <View
-        {...pan.panHandlers}
         accessible
         accessibilityRole="button"
         accessibilityLabel={expanded ? t('tasks.collapseCalendar') : t('tasks.expandCalendar')}
         onAccessibilityTap={() => onExpandedChange(!expanded)}
         style={styles.calendarHandleTouch}
       >
-        <View style={styles.calendarHandleButton}><View style={[styles.calendarHandle, { backgroundColor: theme.tertiary }]} /></View>
+        <Pressable onPress={() => onExpandedChange(!expanded)} hitSlop={8} style={styles.calendarHandleButton}><View style={[styles.calendarHandle, { backgroundColor: theme.tertiary }]} /></Pressable>
       </View>
     </Animated.View>
   );
