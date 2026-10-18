@@ -24,7 +24,7 @@ export function useForegroundOTA(): ForegroundOTAController {
     if (!nativeUpdate.isDownloading) return;
     const download = Math.max(0, Math.min(1, nativeUpdate.downloadProgress ?? 0));
     setState(previous => previous.stage === 'downloading'
-      ? { ...previous, progress: .22 + download * .68 }
+      ? { ...previous, progress: Math.max(previous.progress, .22 + download * .68) }
       : previous);
   }, [nativeUpdate.downloadProgress, nativeUpdate.isDownloading]);
 
@@ -34,7 +34,7 @@ export function useForegroundOTA(): ForegroundOTAController {
 
     updateTask.current = (async () => {
       if (nativeUpdate.isUpdatePending) {
-        setState({ stage: 'pending', progress: .94 });
+        setState({ stage: 'pending', progress: .95 });
         return;
       }
 
@@ -53,7 +53,7 @@ export function useForegroundOTA(): ForegroundOTAController {
       await wait(MINIMUM_STAGE_TIME);
       setState({ stage: 'downloading', progress: .22 });
       await Updates.fetchUpdateAsync();
-      setState({ stage: 'pending', progress: .94 });
+      setState({ stage: 'pending', progress: .95 });
     })().catch(error => {
       setState({
         stage: 'error',

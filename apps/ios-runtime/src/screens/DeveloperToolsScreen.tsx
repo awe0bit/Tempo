@@ -1,9 +1,10 @@
 import * as Updates from 'expo-updates';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Animated, Easing, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Divider, Row, Section } from '../components/Primitives';
 import type { ForegroundOTAState } from '../hooks/useForegroundOTA';
-import { formatDate, t } from '../i18n';
+import { t } from '../i18n';
 import type { TempoTheme } from '../theme';
 import type { TempoSnapshot } from '../types';
 
@@ -12,10 +13,12 @@ type Props = { theme: TempoTheme; snapshot: TempoSnapshot; foregroundOTA: Foregr
 export function DeveloperToolsContent({ theme, snapshot, foregroundOTA }: Props) {
   const update = Updates.useUpdates();
   const sync = snapshot.sync;
-  const updateID = Updates.updateId ?? t('dev.embeddedVersion');
-  const createdAt = Updates.createdAt
-    ? formatDate(Updates.createdAt, { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-    : t('common.notAvailable');
+  const versionMeta = [
+    `v${snapshot.app?.version ?? t('common.notAvailable')}`,
+    snapshot.app?.build ? `(${snapshot.app.build})` : undefined,
+    Updates.runtimeVersion ? `runtime ${Updates.runtimeVersion}` : undefined,
+    Updates.channel ?? 'production',
+  ].filter(Boolean).join(' · ');
 
   return (
     <ScrollView
@@ -28,29 +31,6 @@ export function DeveloperToolsContent({ theme, snapshot, foregroundOTA }: Props)
 
       <OTAProgress theme={theme} update={update} foregroundOTA={foregroundOTA} />
 
-      <Section theme={theme} title={t('dev.otaLayer')}>
-        <Row theme={theme} title={t('dev.runtimeVersion')} detail={Updates.runtimeVersion ?? t('common.notAvailable')} />
-        <Divider theme={theme} />
-        <Row theme={theme} title={t('dev.channel')} detail={Updates.channel ?? 'production'} />
-        <Divider theme={theme} />
-        <Row theme={theme} title={t('dev.source')} detail={Updates.isEmbeddedLaunch ? t('dev.embeddedSource') : t('dev.otaSource')} />
-        <Divider theme={theme} />
-        <View style={styles.valueRow}>
-          <Text style={[styles.valueTitle, { color: theme.text }]}>{t('dev.updateID')}</Text>
-          <Text selectable numberOfLines={2} style={[styles.valueDetail, { color: theme.secondary }]}>{updateID}</Text>
-        </View>
-        <Divider theme={theme} />
-        <Row theme={theme} title={t('dev.publishedAt')} detail={createdAt} />
-      </Section>
-
-      <Section theme={theme} title={t('dev.app')}>
-        <Row theme={theme} title={t('dev.appVersion')} detail={`v${snapshot.app?.version ?? t('common.notAvailable')}`} />
-        <Divider theme={theme} />
-        <Row theme={theme} title={t('dev.build')} detail={snapshot.app?.build ?? t('common.notAvailable')} />
-        <Divider theme={theme} />
-        <Row theme={theme} title={t('dev.automaticUpdates')} detail={Updates.isEnabled ? t('dev.checkOnLaunch') : t('dev.unavailable')} />
-      </Section>
-
       <Section theme={theme} title={t('dev.syncDiagnostics')}>
         <Row theme={theme} title={t('dev.status')} detail={syncLabel(sync?.phase, sync?.pendingChangeCount ?? 0)} />
         <Divider theme={theme} />
@@ -62,18 +42,31 @@ export function DeveloperToolsContent({ theme, snapshot, foregroundOTA }: Props)
       </Section>
 
       <Text style={[styles.note, { color: theme.tertiary }]}>{t('dev.note')}</Text>
+      <Text style={[styles.versionMeta, { color: theme.tertiary }]}>{versionMeta}</Text>
     </ScrollView>
   );
 }
 
 function OTAProgress({ theme, update, foregroundOTA }: { theme: TempoTheme; update: ReturnType<typeof Updates.useUpdates>; foregroundOTA: ForegroundOTAState }) {
   const state = otaState(update, foregroundOTA);
-  const progressWidth = `${Math.round(state.progress * 100)}%` as `${number}%`;
-  const updateInfo = update.downloadedUpdate ?? update.availableUpdate;
-  const updateID = updateInfo?.updateId?.slice(0, 8);
-  const publishedAt = updateInfo?.createdAt
-    ? formatDate(updateInfo.createdAt, { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-    : undefined;
+  const progressPercent = snapProgress(state.progress);
+  const progressTarget = Math.max(0, Math.min(100, state.progress * 100));
+  const animatedProgress = useRef(new Animated.Value(progressTarget)).current;
+
+  useEffect(() => {
+    Animated.timing(animatedProgress, {
+      toValue: progressTarget,
+      duration: 360,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [animatedProgress, progressTarget]);
+
+  const progressWidth = animatedProgress.interpolate({
+    inputRange: [0, 100],
+    outputRange: ['0%', '100%'],
+    extrapolate: 'clamp',
+  });
 
   return (
     <Section theme={theme} title={t('dev.updateProgress')}>
@@ -83,34 +76,47 @@ function OTAProgress({ theme, update, foregroundOTA }: { theme: TempoTheme; upda
             <Text style={[styles.progressTitle, { color: theme.text }]}>{state.title}</Text>
             <Text style={[styles.progressDetail, { color: state.error ? theme.danger : theme.secondary }]}>{state.detail}</Text>
           </View>
-          <Text style={[styles.progressPercent, { color: theme.secondary }]}>{Math.round(state.progress * 100)}%</Text>
+          <Text style={[styles.progressPercent, { color: theme.secondary }]}>{progressPercent}%</Text>
         </View>
 
         <View style={[styles.progressTrack, { backgroundColor: theme.surfaceMuted }]}>
-          <View style={[styles.progressFill, { width: progressWidth, backgroundColor: state.error ? theme.danger : theme.accent }]} />
+          <Animated.View style={[styles.progressFill, { width: progressWidth, backgroundColor: state.error ? theme.danger : theme.accent }]} />
+          {OTA_STAGE_BOUNDARIES.map(boundary => <View
+            key={boundary}
+            pointerEvents="none"
+            style={[styles.progressDivider, {
+              left: `${boundary}%` as `${number}%`,
+              backgroundColor: theme.groupedSurface,
+            }]}
+          />)}
         </View>
-
-        {updateID || publishedAt ? <View style={[styles.targetRow, { borderTopColor: theme.separator }]}><Text style={[styles.targetLabel, { color: theme.secondary }]}>{t('dev.targetUpdate')}</Text><Text style={[styles.targetValue, { color: theme.text }]}>{[updateID, publishedAt].filter(Boolean).join(' · ')}</Text></View> : null}
       </View>
     </Section>
   );
 }
 
+// The dividers match real OTA transitions: check, download, install, restart.
+const OTA_STAGE_BOUNDARIES = [20, 90, 95] as const;
+
+function snapProgress(progress: number) {
+  if (progress >= 1) return 100;
+  return Math.max(0, Math.min(95, Math.floor(progress * 20) * 5));
+}
+
 function otaState(update: ReturnType<typeof Updates.useUpdates>, foregroundOTA: ForegroundOTAState) {
   if (!Updates.isEnabled) return { progress: 0, title: t('dev.otaUnavailable'), detail: t('dev.otaUnavailableDetail'), error: true };
   if (foregroundOTA.stage === 'error') return { progress: foregroundOTA.progress, title: t('dev.downloadFailed'), detail: foregroundOTA.error ?? t('error.operationFailed'), error: true };
-  if (foregroundOTA.stage === 'pending' || update.isUpdatePending) return { progress: .94, title: t('dev.readyToRestart'), detail: t('dev.readyToRestartDetail'), error: false };
+  if (foregroundOTA.stage === 'pending' || update.isUpdatePending) return { progress: .95, title: t('dev.readyToRestart'), detail: t('dev.readyToRestartDetail'), error: false };
   if (foregroundOTA.stage === 'downloading' || update.isDownloading) {
     const progress = foregroundOTA.stage === 'downloading' ? foregroundOTA.progress : .22 + Math.max(0, Math.min(1, update.downloadProgress ?? 0)) * .68;
-    const download = Math.round(Math.max(0, Math.min(1, (progress - .22) / .68)) * 100);
-    return { progress, title: t('dev.downloading'), detail: t('dev.downloadingDetail', { progress: download }), error: false };
+    return { progress, title: t('dev.downloading'), detail: t('dev.downloadingDetail'), error: false };
   }
   if (foregroundOTA.stage === 'available' || update.isUpdateAvailable) return { progress: .2, title: t('dev.updatePublished'), detail: t('dev.updatePublishedDetail'), error: false };
   if (foregroundOTA.stage === 'checking' || update.isChecking || update.isStartupProcedureRunning) return { progress: Math.max(.08, foregroundOTA.progress), title: t('dev.checkingUpdate'), detail: t('dev.checkingUpdateDetail'), error: false };
   if (foregroundOTA.stage === 'current') return { progress: 1, title: t('dev.updateComplete'), detail: t('dev.updateCompleteDetail'), error: false };
   if (update.checkError) return { progress: .08, title: t('dev.checkFailed'), detail: update.checkError.message, error: true };
   if (update.downloadError) return { progress: .18, title: t('dev.downloadFailed'), detail: update.downloadError.message, error: true };
-  if (update.isRestarting) return { progress: .96, title: t('dev.restarting'), detail: t('dev.restartingDetail'), error: false };
+  if (update.isRestarting) return { progress: .98, title: t('dev.restarting'), detail: t('dev.restartingDetail'), error: false };
   return { progress: 0, title: t('dev.readyToCheck'), detail: t('dev.readyToCheckDetail'), error: false };
 }
 
@@ -132,13 +138,9 @@ const styles = StyleSheet.create({
   progressTitle: { fontSize: 16, lineHeight: 21, fontWeight: '600' },
   progressDetail: { fontSize: 12.5, lineHeight: 18, marginTop: 2 },
   progressPercent: { fontSize: 13, fontWeight: '600', fontVariant: ['tabular-nums'], marginLeft: 10 },
-  progressTrack: { height: 6, borderRadius: 3, overflow: 'hidden', marginTop: 14 },
-  progressFill: { height: 6, borderRadius: 3 },
-  targetRow: { marginTop: 14, paddingTop: 11, borderTopWidth: StyleSheet.hairlineWidth, flexDirection: 'row', alignItems: 'center' },
-  targetLabel: { flex: 1, fontSize: 12.5, lineHeight: 18 },
-  targetValue: { fontSize: 12.5, lineHeight: 18, fontWeight: '500', fontVariant: ['tabular-nums'] },
-  valueRow: { minHeight: 64, paddingHorizontal: 20, paddingVertical: 11 },
-  valueTitle: { fontSize: 17, lineHeight: 22 },
-  valueDetail: { fontSize: 12.5, lineHeight: 17, marginTop: 3 },
+  progressTrack: { position: 'relative', height: 8, borderRadius: 4, overflow: 'hidden', marginTop: 16 },
+  progressFill: { height: 8, borderRadius: 4 },
+  progressDivider: { position: 'absolute', top: 0, bottom: 0, width: 2, marginLeft: -1, opacity: .92 },
   note: { fontSize: 12.5, lineHeight: 18, marginHorizontal: 30, marginTop: 2 },
+  versionMeta: { fontSize: 10.5, lineHeight: 15, textAlign: 'center', opacity: .62, marginHorizontal: 30, marginTop: 12 },
 });
