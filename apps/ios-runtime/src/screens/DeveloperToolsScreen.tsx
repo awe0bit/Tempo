@@ -62,12 +62,6 @@ function OTAProgress({ theme, update, foregroundOTA }: { theme: TempoTheme; upda
     }).start();
   }, [animatedProgress, progressTarget]);
 
-  const progressWidth = animatedProgress.interpolate({
-    inputRange: [0, 100],
-    outputRange: ['0%', '100%'],
-    extrapolate: 'clamp',
-  });
-
   return (
     <Section theme={theme} title={t('dev.updateProgress')}>
       <View style={styles.progressBody}>
@@ -79,24 +73,25 @@ function OTAProgress({ theme, update, foregroundOTA }: { theme: TempoTheme; upda
           <Text style={[styles.progressPercent, { color: theme.secondary }]}>{progressPercent}%</Text>
         </View>
 
-        <View style={[styles.progressTrack, { backgroundColor: theme.surfaceMuted }]}>
-          <Animated.View style={[styles.progressFill, { width: progressWidth, backgroundColor: state.error ? theme.danger : theme.accent }]} />
-          {OTA_STAGE_BOUNDARIES.map(boundary => <View
-            key={boundary}
-            pointerEvents="none"
-            style={[styles.progressDivider, {
-              left: `${boundary}%` as `${number}%`,
-              backgroundColor: theme.groupedSurface,
-            }]}
-          />)}
+        <View style={styles.progressStages}>
+          {OTA_STAGE_RANGES.map(([start, end]) => {
+            const stageWidth = animatedProgress.interpolate({
+              inputRange: [start, end],
+              outputRange: ['0%', '100%'],
+              extrapolate: 'clamp',
+            });
+            return <View key={start} style={[styles.progressStage, { backgroundColor: theme.surfaceMuted }]}>
+              <Animated.View style={[styles.progressStageFill, { width: stageWidth, backgroundColor: state.error ? theme.danger : theme.accent }]} />
+            </View>;
+          })}
         </View>
       </View>
     </Section>
   );
 }
 
-// The dividers match real OTA transitions: check, download, install, restart.
-const OTA_STAGE_BOUNDARIES = [20, 90, 95] as const;
+// Each capsule represents one real OTA stage: check, download, install, restart.
+const OTA_STAGE_RANGES = [[0, 20], [20, 90], [90, 95], [95, 100]] as const;
 
 function snapProgress(progress: number) {
   if (progress >= 1) return 100;
@@ -138,9 +133,9 @@ const styles = StyleSheet.create({
   progressTitle: { fontSize: 16, lineHeight: 21, fontWeight: '600' },
   progressDetail: { fontSize: 12.5, lineHeight: 18, marginTop: 2 },
   progressPercent: { fontSize: 13, fontWeight: '600', fontVariant: ['tabular-nums'], marginLeft: 10 },
-  progressTrack: { position: 'relative', height: 8, borderRadius: 4, overflow: 'hidden', marginTop: 16 },
-  progressFill: { height: 8, borderRadius: 4 },
-  progressDivider: { position: 'absolute', top: 0, bottom: 0, width: 2, marginLeft: -1, opacity: .92 },
+  progressStages: { flexDirection: 'row', gap: 5, marginTop: 16 },
+  progressStage: { flex: 1, height: 7, borderRadius: 4, overflow: 'hidden' },
+  progressStageFill: { height: 7, borderRadius: 4 },
   note: { fontSize: 12.5, lineHeight: 18, marginHorizontal: 30, marginTop: 2 },
   versionMeta: { fontSize: 10.5, lineHeight: 15, textAlign: 'center', opacity: .62, marginHorizontal: 30, marginTop: 12 },
 });

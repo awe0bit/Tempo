@@ -26,5 +26,5 @@ export function makeTheme(scheme: ColorSchemeName | 'light' | 'dark') {
   };
 }
 
-export const radius = { small: 10, medium: 16, large: 24, pill: 999 };
+export const radius = { small: 10, medium: 16, card: 18, large: 24, pill: 999 };
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 28 };

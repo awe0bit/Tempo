@@ -8,7 +8,7 @@ import { SwipeListView } from 'react-native-swipe-list-view';
 import { NativeSymbol } from '../components/NativeControls';
 import { NativeChromeGap, PrimaryButton, Screen, Sheet } from '../components/Primitives';
 import { formatDate, t, weekdayLabels } from '../i18n';
-import type { TempoTheme } from '../theme';
+import { radius, type TempoTheme } from '../theme';
 import type { TempoCommand, TempoTask } from '../types';
 
 type Props = {
@@ -324,13 +324,22 @@ function CalendarStrip({ theme, selected, onSelect, progress, expanded, onExpand
   const selectedRow = Math.floor(selectedIndex / 7);
   const dragStart = useRef(expanded ? 1 : 0);
   const pan = useMemo(() => PanResponder.create({
-    onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dy) > 3 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
-    onPanResponderGrant: () => { dragStart.current = expanded ? 1 : 0; },
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderGrant: () => {
+      dragStart.current = expanded ? 1 : 0;
+      progress.stopAnimation(value => { dragStart.current = value; });
+    },
     onPanResponderMove: (_, gesture) => progress.setValue(Math.max(0, Math.min(1, dragStart.current + gesture.dy / 210))),
     onPanResponderRelease: (_, gesture) => {
+      if (Math.abs(gesture.dy) < 4 && Math.abs(gesture.dx) < 4) {
+        onExpandedChange(!expanded);
+        return;
+      }
       const position = Math.max(0, Math.min(1, dragStart.current + gesture.dy / 210));
       onExpandedChange(gesture.vy > .22 ? true : gesture.vy < -.22 ? false : position >= .5);
     },
+    onPanResponderTerminationRequest: () => false,
     onPanResponderTerminate: (_, gesture) => {
       const position = Math.max(0, Math.min(1, dragStart.current + gesture.dy / 210));
       onExpandedChange(position >= .5);
@@ -347,8 +356,15 @@ function CalendarStrip({ theme, selected, onSelect, progress, expanded, onExpand
           {[0, 1, 2, 3, 4, 5].map((row) => <View key={row} style={styles.weekRow}>{days.slice(row * 7, row * 7 + 7).map((date) => <DateCell key={date.toISOString()} date={date} selected={sameDay(date, selected)} inCurrentMonth={date.getMonth() === selected.getMonth() && date.getFullYear() === selected.getFullYear()} theme={theme} onPress={() => onSelect(date)} />)}</View>)}
         </Animated.View>
       </Animated.View>
-      <View {...pan.panHandlers} style={styles.calendarHandleTouch}>
-        <Pressable onPress={() => onExpandedChange(!expanded)} hitSlop={8} style={styles.calendarHandleButton}><View style={[styles.calendarHandle, { backgroundColor: theme.tertiary }]} /></Pressable>
+      <View
+        {...pan.panHandlers}
+        accessible
+        accessibilityRole="button"
+        accessibilityLabel={expanded ? t('tasks.collapseCalendar') : t('tasks.expandCalendar')}
+        onAccessibilityTap={() => onExpandedChange(!expanded)}
+        style={styles.calendarHandleTouch}
+      >
+        <View style={styles.calendarHandleButton}><View style={[styles.calendarHandle, { backgroundColor: theme.tertiary }]} /></View>
       </View>
     </Animated.View>
   );
@@ -487,7 +503,7 @@ function shortDate(value: string) { return formatDate(value, { month: 'numeric',
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  calendar: { overflow: 'hidden', marginTop: 10, marginHorizontal: 18, paddingHorizontal: 12, borderRadius: 18, borderWidth: StyleSheet.hairlineWidth },
+  calendar: { overflow: 'hidden', marginTop: 10, marginHorizontal: 18, paddingHorizontal: 12, borderRadius: radius.card, borderCurve: 'continuous', borderWidth: StyleSheet.hairlineWidth },
   weekdayRow: { height: 24, flexDirection: 'row', alignItems: 'center' },
   weekday: { flex: 1, textAlign: 'center', fontSize: 12, fontWeight: '500' },
   calendarGridViewport: { overflow: 'hidden' },
@@ -504,8 +520,8 @@ const styles = StyleSheet.create({
   groupHeader: { height: 44, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 6 },
   groupTitle: { flex: 1, fontSize: 15, fontWeight: '600', letterSpacing: -.12 },
   groupCount: { minWidth: 26, height: 24, borderRadius: 12, textAlign: 'center', textAlignVertical: 'center', fontSize: 12, fontWeight: '600' },
-  groupTop: { borderTopLeftRadius: 18, borderTopRightRadius: 18 },
-  groupBottom: { borderBottomLeftRadius: 18, borderBottomRightRadius: 18 },
+  groupTop: { borderTopLeftRadius: radius.card, borderTopRightRadius: radius.card },
+  groupBottom: { borderBottomLeftRadius: radius.card, borderBottomRightRadius: radius.card },
   deleteBehind: { minHeight: 62, flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', paddingRight: 6, overflow: 'hidden' },
   deleteBubble: { width: 64, height: 44, borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, overflow: 'hidden' },
   deletePressable: { flex: 1, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
