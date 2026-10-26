@@ -52,6 +52,7 @@ private struct iOSRootView: View {
   @State private var runtimeTabVisibility: CGFloat = 1
   @AppStorage(TempoPreferenceKey.appearance) private var appearance = "system"
   @AppStorage(TempoPreferenceKey.moduleOrder) private var moduleOrder = TempoModuleOrder.defaultValue
+  @AppStorage(TempoIOSModulePreferenceKey.installed) private var installedModules = TempoIOSModuleCatalog.defaultInstalledValue
 
   var body: some View {
     GeometryReader { geometry in
@@ -92,6 +93,11 @@ private struct iOSRootView: View {
       feedback.prepare()
       feedback.impactOccurred(intensity: 0.78)
     }
+    .onChange(of: installedModules) { _ in
+      if !visibleTabs.contains(selection) {
+        selection = .inbox
+      }
+    }
     .onChange(of: scenePhase) { phase in
       if phase == .active {
         consumePendingWidgetDestination()
@@ -105,14 +111,16 @@ private struct iOSRootView: View {
       }
     }
     .onOpenURL { url in
+      let requested: AppTab
       switch url.host {
-      case "today": selection = .today
-      case "inbox": selection = .inbox
-      case "pomodoro": selection = .pomodoro
-      case "rss": selection = .rss
-      case "settings": selection = .settings
-      default: selection = .today
+      case "today": requested = .today
+      case "inbox": requested = .inbox
+      case "pomodoro": requested = .pomodoro
+      case "rss": requested = .rss
+      case "settings": requested = .settings
+      default: requested = .inbox
       }
+      selection = visibleTabs.contains(requested) ? requested : .settings
     }
     .alert(item: $availableUpdate) { release in
       Alert(
@@ -155,7 +163,10 @@ private struct iOSRootView: View {
   }
 
   private var visibleTabs: [AppTab] {
-    TempoNavigationPolicy.visibleTabs(order: TempoModuleOrder.decode(moduleOrder))
+    TempoIOSModuleCatalog.visibleTabs(
+      moduleOrder: moduleOrder,
+      installedRawValue: installedModules
+    )
   }
 
   private func consumePendingWidgetDestination() {
@@ -163,8 +174,9 @@ private struct iOSRootView: View {
     guard let rawValue = defaults?.string(forKey: "pendingWidgetDestination") else { return }
     defaults?.removeObject(forKey: "pendingWidgetDestination")
     switch rawValue {
-    case "pomodoro": selection = .pomodoro
-    default: selection = .today
+    case "pomodoro" where visibleTabs.contains(.pomodoro): selection = .pomodoro
+    case "today" where visibleTabs.contains(.today): selection = .today
+    default: selection = .inbox
     }
   }
 
