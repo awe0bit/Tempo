@@ -65,7 +65,6 @@ final class TempoNativeRegistry {
       "colorScheme": scheme,
       "revision": revision,
       "capabilities": ["feedback.selection"],
-      "modules": TempoIOSModuleCatalog.snapshot(),
       "preferences": [
         "appearance": appearance,
         "haptics": defaults.object(forKey: TempoPreferenceKey.haptics) as? Bool ?? true,
@@ -320,22 +319,6 @@ final class TempoNativeRegistry {
          ["system", "light", "dark"].contains(appearance) {
         defaults.set(appearance, forKey: TempoPreferenceKey.appearance)
       }
-      emitSnapshot()
-      return ["ok": true]
-    case "module.install":
-      guard let module = TempoIOSModuleID(rawValue: payload.string("id")) else {
-        throw BridgeError.invalidPayload("模块不存在")
-      }
-      TempoIOSModuleCatalog.setInstalled(module, installed: true)
-      selectionFeedback()
-      emitSnapshot()
-      return ["ok": true]
-    case "module.remove":
-      guard let module = TempoIOSModuleID(rawValue: payload.string("id")) else {
-        throw BridgeError.invalidPayload("模块不存在")
-      }
-      TempoIOSModuleCatalog.setInstalled(module, installed: false)
-      selectionFeedback()
       emitSnapshot()
       return ["ok": true]
     case "update.check":

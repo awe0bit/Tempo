@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, ActivityIndicator, Animated, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AccessibilityInfo, Animated, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTransitionProgress } from 'react-native-screens';
@@ -11,7 +11,7 @@ import { SlidingSegmentedControl } from '../components/SlidingSegmentedControl';
 import { t } from '../i18n';
 import { tempoNative } from '../native/TempoNative';
 import type { TempoTheme } from '../theme';
-import type { TempoModule, TempoModuleID, TempoSnapshot } from '../types';
+import type { TempoSnapshot } from '../types';
 
 type Page = 'sync' | 'ai' | 'focus' | 'appearance' | 'calendar' | 'modules' | 'about';
 type SettingsStackParamList = {
@@ -121,9 +121,9 @@ function DetailPage({ navigation, page, theme, snapshot, perform, message, setMe
       tempoNative.setNavigationDepth(0);
     };
   }, [navigation, transition.closing, transition.progress]);
-  const content = page === 'sync' ? <SyncSettings theme={theme} value={snapshot.sync} perform={perform} setMessage={setMessage} /> : page === 'ai' ? <AISettings theme={theme} value={snapshot.ai} perform={perform} setMessage={setMessage} /> : page === 'focus' ? <FocusSettings theme={theme} value={snapshot.pomodoro} perform={perform} /> : page === 'appearance' ? <AppearanceSettings theme={theme} value={snapshot.preferences?.appearance} perform={perform} /> : page === 'calendar' ? <CalendarSettings theme={theme} value={snapshot.preferences} perform={perform} /> : page === 'modules' ? <ModuleSettings theme={theme} modules={snapshot.modules ?? []} value={snapshot.preferences?.moduleOrder} supportsSelectionFeedback={snapshot.capabilities?.includes('feedback.selection') ?? false} perform={perform} /> : <AboutSettings theme={theme} value={snapshot.app} perform={perform} setMessage={setMessage} />;
+  const content = page === 'sync' ? <SyncSettings theme={theme} value={snapshot.sync} perform={perform} setMessage={setMessage} /> : page === 'ai' ? <AISettings theme={theme} value={snapshot.ai} perform={perform} setMessage={setMessage} /> : page === 'focus' ? <FocusSettings theme={theme} value={snapshot.pomodoro} perform={perform} /> : page === 'appearance' ? <AppearanceSettings theme={theme} value={snapshot.preferences?.appearance} perform={perform} /> : page === 'calendar' ? <CalendarSettings theme={theme} value={snapshot.preferences} perform={perform} /> : page === 'modules' ? <ModuleSettings theme={theme} value={snapshot.preferences?.moduleOrder} supportsSelectionFeedback={snapshot.capabilities?.includes('feedback.selection') ?? false} perform={perform} /> : <AboutSettings theme={theme} value={snapshot.app} perform={perform} setMessage={setMessage} />;
 
-  return <Screen theme={theme} backgroundColor={theme.background}><KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}><ScrollView style={styles.scroll} alwaysBounceVertical contentInsetAdjustmentBehavior="automatic" keyboardDismissMode="interactive" keyboardShouldPersistTaps="handled" contentContainerStyle={styles.detailContent}>{content}{message ? <Text style={[styles.message, { color: theme.secondary }]}>{message}</Text> : null}</ScrollView></KeyboardAvoidingView></Screen>;
+  return <Screen theme={theme} backgroundColor={theme.background}><KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>{page === 'modules' ? <View style={styles.modulePage}>{content}</View> : <ScrollView style={styles.scroll} alwaysBounceVertical contentInsetAdjustmentBehavior="automatic" keyboardDismissMode="interactive" keyboardShouldPersistTaps="handled" contentContainerStyle={styles.detailContent}>{content}{message ? <Text style={[styles.message, { color: theme.secondary }]}>{message}</Text> : null}</ScrollView>}</KeyboardAvoidingView></Screen>;
 }
 function SyncSettings({ theme, value, perform, setMessage }: any) { const [serverURL, setServerURL] = useState(value?.serverURL ?? ''); const [deviceName, setDeviceName] = useState(value?.deviceName ?? 'iPhone'); const [token, setToken] = useState(''); const [autoSync, setAutoSync] = useState(value?.autoSync ?? true); async function save(test = false) { setMessage(test ? t('settings.testingConnection') : t('settings.saving')); try { const payload = { serverURL, deviceName, token, autoSync }; await perform(test ? 'sync.test' : 'sync.save', payload); setMessage(test ? t('settings.connectionSuccess') : t('settings.savedAutoSync')); } catch { setMessage(t('settings.connectionFailed')); } } return <><Section theme={theme} title={t('settings.server')}><Field theme={theme} label={t('settings.serverURL')} value={serverURL} onChange={setServerURL} placeholder="https://sync.example.com" /><Divider theme={theme} /><Field theme={theme} label={t('settings.deviceName')} value={deviceName} onChange={setDeviceName} /><Divider theme={theme} /><Field theme={theme} label={t('settings.token')} value={token} onChange={setToken} placeholder={value?.hasToken ? t('settings.tokenSavedPlaceholder') : t('settings.tokenPlaceholder')} secure /></Section><Section theme={theme}><ToggleRow theme={theme} title={t('settings.autoSync')} detail={t('settings.autoSyncDetail')} value={autoSync} onValueChange={setAutoSync} /><Divider theme={theme} /><Row theme={theme} title={t('settings.currentStatus')} detail={`${syncLabel(value?.phase, value?.pendingChangeCount ?? 0)} · revision ${value?.revision ?? 0}`} /></Section><Section theme={theme}><ActionRow theme={theme} title={t('settings.saveConfiguration')} onPress={() => save(false)} /><Divider theme={theme} /><ActionRow theme={theme} title={t('settings.testConnection')} onPress={() => save(true)} /><Divider theme={theme} /><ActionRow theme={theme} title={t('settings.syncNow')} onPress={() => perform('sync.now')} /></Section></>; }
 function AISettings({ theme, value, perform, setMessage }: any) {
@@ -176,30 +176,9 @@ function FocusSettings({ theme, value, perform }: any) {
 }
 function AppearanceSettings({ theme, value = 'system', perform }: { theme: TempoTheme; value?: 'system' | 'light' | 'dark'; perform: <T>(action: string, payload?: Record<string, unknown>) => Promise<T> }) { const choices = ['system', 'light', 'dark'] as const; return <Section theme={theme}>{choices.map((choice, index) => <View key={choice}><Row theme={theme} title={appearanceLabel(choice)} onPress={() => perform('preferences.save', { appearance: choice })} right={value === choice ? <NativeSymbol name="checkmark" color={theme.accent} size={17} /> : <View style={styles.choiceMark} />} />{index < choices.length - 1 ? <Divider theme={theme} /> : null}</View>)}</Section>; }
 function CalendarSettings({ theme, value, perform }: any) { const save = (payload: Record<string, boolean>) => perform('preferences.save', payload); return <Section theme={theme}><ToggleRow theme={theme} title={t('settings.weekStartsMonday')} value={value?.weekStartsMonday ?? true} onValueChange={(weekStartsMonday) => save({ weekStartsMonday })} /><Divider theme={theme} /><ToggleRow theme={theme} title={t('settings.showFestivals')} value={value?.showFestivals ?? true} onValueChange={(showFestivals) => save({ showFestivals })} /><Divider theme={theme} /><ToggleRow theme={theme} title={t('settings.showTaskIndicators')} value={value?.showTaskIndicators ?? true} onValueChange={(showTaskIndicators) => save({ showTaskIndicators })} /></Section>; }
-function ModuleSettings({ theme, modules, value, supportsSelectionFeedback, perform }: {
-  theme: TempoTheme;
-  modules: TempoModule[];
-  value?: string;
-  supportsSelectionFeedback: boolean;
-  perform: <T>(action: string, payload?: Record<string, unknown>) => Promise<T>;
-}) {
-  const installedSignature = modules.filter((module) => module.installed).map((module) => module.id).join(',');
-  const [items, setItems] = useState<string[]>(() => orderedInstalledModules(modules, value));
-  const [busy, setBusy] = useState<TempoModuleID>();
-
-  useEffect(() => {
-    setItems(orderedInstalledModules(modules, value));
-  }, [installedSignature, value]);
-
-  async function toggle(module: TempoModule) {
-    if (busy) return;
-    setBusy(module.id);
-    try {
-      await perform(module.installed ? 'module.remove' : 'module.install', { id: module.id });
-    } finally {
-      setBusy(undefined);
-    }
-  }
+function ModuleSettings({ theme, value, supportsSelectionFeedback, perform }: any) {
+  const initial = String(value ?? 'inbox,today,focus,rss,settings').split(',').filter(Boolean);
+  const [items, setItems] = useState<string[]>(initial);
 
   async function reorder(fromIndex: number, toIndex: number) {
     if (fromIndex === toIndex || fromIndex < 0 || fromIndex >= items.length) return;
@@ -249,63 +228,21 @@ function ModuleSettings({ theme, modules, value, supportsSelectionFeedback, perf
     />;
   }
 
-  return <>
-    <View style={styles.moduleHero}>
-      <View style={[styles.moduleHeroIcon, { backgroundColor: theme.accentSoft }]}><NativeSymbol name="square.grid.2x2.fill" color={theme.accent} size={24} /></View>
-      <View style={styles.moduleHeroCopy}>
-        <Text style={[styles.moduleHeroTitle, { color: theme.text }]}>{t('settings.moduleCenterTitle')}</Text>
-        <Text style={[styles.moduleHeroDetail, { color: theme.secondary }]}>{t('settings.moduleCenterDetail')}</Text>
-      </View>
+  return <Section theme={theme} title={t('settings.modulesLimit')}>
+    <DragList
+      data={items}
+      keyExtractor={(item) => item}
+      renderItem={renderItem}
+      onReordered={reorder}
+      scrollEnabled={false}
+      showsVerticalScrollIndicator={false}
+      style={{ height: items.length * 56 }}
+    />
+    <View style={[styles.moduleHint, { borderTopColor: theme.separator }]}>
+      <NativeSymbol name="hand.draw" color={theme.secondary} size={16} />
+      <Text style={[styles.moduleHintText, { color: theme.secondary }]}>{t('settings.modulesDragHint')}</Text>
     </View>
-
-    <Section theme={theme} title={t('settings.availableTools')}>
-      {modules.map((module, index) => <View key={module.id}>
-        <View style={styles.catalogRow}>
-          <View style={[styles.catalogIcon, { backgroundColor: theme.surfaceMuted }]}>
-            <NativeSymbol name={moduleSymbol(module.id)} color={module.installed ? theme.accent : theme.text} size={21} />
-          </View>
-          <View style={styles.catalogCopy}>
-            <Text style={[styles.catalogTitle, { color: theme.text }]}>{moduleTitle(module.id)}</Text>
-            <Text numberOfLines={2} style={[styles.catalogDetail, { color: theme.secondary }]}>{moduleDescription(module.id)}</Text>
-            <Text style={[styles.catalogMeta, { color: theme.tertiary }]}>{formatModuleSize(module.downloadSize)} · v{module.version} · {t('settings.moduleBundled')}</Text>
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={module.installed ? t('settings.removeModule', { title: moduleTitle(module.id) }) : t('settings.installModule', { title: moduleTitle(module.id) })}
-            disabled={Boolean(busy)}
-            onPress={() => void toggle(module)}
-            style={({ pressed }) => [
-              styles.moduleAction,
-              { backgroundColor: module.installed ? theme.surfaceMuted : theme.accent },
-              pressed && styles.moduleActionPressed,
-              busy && busy !== module.id && styles.moduleActionDisabled,
-            ]}
-          >
-            {busy === module.id ? <ActivityIndicator color={module.installed ? theme.secondary : '#FFFFFF'} size="small" /> : <Text style={[styles.moduleActionText, { color: module.installed ? theme.secondary : '#FFFFFF' }]}>{module.installed ? t('settings.remove') : t('settings.get')}</Text>}
-          </Pressable>
-        </View>
-        {index < modules.length - 1 ? <Divider theme={theme} inset={66} /> : null}
-      </View>)}
-    </Section>
-
-    <Text style={[styles.moduleFootnote, { color: theme.secondary }]}>{t('settings.moduleDataKept')}</Text>
-
-    {items.length ? <Section theme={theme} title={t('settings.installedTools')}>
-      <DragList
-        data={items}
-        keyExtractor={(item) => item}
-        renderItem={renderItem}
-        onReordered={reorder}
-        scrollEnabled={false}
-        showsVerticalScrollIndicator={false}
-        style={{ height: items.length * 56 }}
-      />
-      <View style={[styles.moduleHint, { borderTopColor: theme.separator }]}>
-        <NativeSymbol name="hand.draw" color={theme.secondary} size={16} />
-        <Text style={[styles.moduleHintText, { color: theme.secondary }]}>{t('settings.modulesDragHint')}</Text>
-      </View>
-    </Section> : null}
-  </>;
+  </Section>;
 }
 function ModuleDragRow({ theme, title, index, isActive, onDragStart, onDragEnd, showDivider, ...accessibilityProps }: {
   theme: TempoTheme;
@@ -382,16 +319,5 @@ function ActionRow({ theme, title, onPress }: { theme: TempoTheme; title: string
 function syncLabel(phase?: string, pending = 0) { if (pending) return t('sync.pending', { count: pending }); if (phase === 'syncing') return t('sync.syncing'); if (phase === 'error') return t('sync.error'); return t('sync.current'); }
 function appearanceLabel(value: 'system' | 'light' | 'dark' | undefined) { return value === 'light' ? t('settings.appearanceLight') : value === 'dark' ? t('settings.appearanceDark') : t('settings.appearanceSystem'); }
 function pageTitle(page: Page) { return ({ sync: t('settings.sync'), ai: t('settings.ai'), focus: t('settings.pomodoro'), appearance: t('settings.appearance'), calendar: t('settings.calendar'), modules: t('settings.modules'), about: t('settings.about') } as const)[page]; }
-function orderedInstalledModules(modules: TempoModule[], value?: string) {
-  const installed = new Set(modules.filter((module) => module.installed).map((module) => module.id));
-  const ordered = String(value ?? '').split(',').map((item) => item === 'focus' ? 'pomodoro' : item).filter((item): item is TempoModuleID => installed.has(item as TempoModuleID));
-  for (const module of modules) {
-    if (module.installed && !ordered.includes(module.id)) ordered.push(module.id);
-  }
-  return ordered;
-}
-function moduleSymbol(value: TempoModuleID): NativeSymbolName { return ({ today: 'calendar', pomodoro: 'timer', rss: 'dot.radiowaves.left.and.right' } as const)[value]; }
-function moduleDescription(value: TempoModuleID) { return ({ today: t('settings.moduleTodayDescription'), pomodoro: t('settings.modulePomodoroDescription'), rss: t('settings.moduleRSSDescription') } as const)[value]; }
-function formatModuleSize(bytes: number) { return `${Math.max(.1, bytes / 1_000_000).toFixed(1)} MB`; }
 function moduleTitle(value: string) { return ({ inbox: t('settings.inbox'), today: t('settings.today'), focus: t('settings.pomodoro'), pomodoro: t('settings.pomodoro'), rss: t('settings.rss'), settings: t('settings.title') } as Record<string, string>)[value] ?? value; }
-const styles = StyleSheet.create({ scroll: { flex: 1 }, content: { flexGrow: 1, paddingTop: 6, paddingBottom: 92 }, settingRow: { minHeight: 56, flexDirection: 'row', alignItems: 'center', paddingLeft: 13, paddingRight: 15, paddingVertical: 6 }, iconBox: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center', marginRight: 8 }, settingText: { flex: 1 }, settingTitle: { fontSize: 16.5, lineHeight: 22, fontWeight: '400', letterSpacing: -.18 }, settingDetail: { fontSize: 12.5, lineHeight: 17, marginTop: 1 }, chevron: { fontSize: 25, fontWeight: '300' }, choiceMark: { width: 40, height: 40 }, detailContent: { flexGrow: 1, paddingTop: 6, paddingBottom: 34 }, field: { minHeight: 60, paddingHorizontal: 17, paddingVertical: 10 }, fieldMultiline: { minHeight: 94 }, fieldLabel: { fontSize: 12.5, lineHeight: 17, fontWeight: '400', marginBottom: 3 }, fieldInput: { fontSize: 16, lineHeight: 21, padding: 0 }, fieldInputMultiline: { minHeight: 54, textAlignVertical: 'top' }, message: { textAlign: 'center', fontSize: 13.5, lineHeight: 19, marginTop: 4, marginBottom: 12, paddingHorizontal: 24 }, providerControl: { marginHorizontal: 11, marginVertical: 10 }, choice: { minHeight: 64, paddingHorizontal: 17, flexDirection: 'row', alignItems: 'center', gap: 12 }, choiceTitle: { flex: 1, fontSize: 16, lineHeight: 21, fontWeight: '400' }, choiceControl: { width: 194 }, actionRow: { minHeight: 52, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 }, actionTitle: { fontSize: 16, lineHeight: 21, fontWeight: '500' }, moduleHero: { marginHorizontal: 17, marginTop: 5, marginBottom: 20, flexDirection: 'row', alignItems: 'center' }, moduleHeroIcon: { width: 50, height: 50, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginRight: 13 }, moduleHeroCopy: { flex: 1 }, moduleHeroTitle: { fontSize: 20, lineHeight: 25, fontWeight: '700', letterSpacing: -.3 }, moduleHeroDetail: { fontSize: 13.5, lineHeight: 19, marginTop: 3 }, catalogRow: { minHeight: 92, flexDirection: 'row', alignItems: 'center', paddingLeft: 13, paddingRight: 13, paddingVertical: 11 }, catalogIcon: { width: 44, height: 44, borderRadius: 13, alignItems: 'center', justifyContent: 'center', marginRight: 10 }, catalogCopy: { flex: 1, paddingRight: 8 }, catalogTitle: { fontSize: 16.5, lineHeight: 21, fontWeight: '600', letterSpacing: -.15 }, catalogDetail: { fontSize: 12.5, lineHeight: 17, marginTop: 2 }, catalogMeta: { fontSize: 10.5, lineHeight: 15, marginTop: 3 }, moduleAction: { width: 62, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }, moduleActionPressed: { transform: [{ scale: .94 }], opacity: .82 }, moduleActionDisabled: { opacity: .45 }, moduleActionText: { fontSize: 13.5, lineHeight: 17, fontWeight: '600' }, moduleFootnote: { fontSize: 12.5, lineHeight: 18, marginTop: -12, marginBottom: 18, marginHorizontal: 30 }, moduleItem: { minHeight: 56, marginHorizontal: 6, borderRadius: 14 }, moduleItemActive: { zIndex: 2, shadowColor: '#000000', shadowOpacity: .12, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } }, moduleHighlight: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, borderRadius: 14 }, modulePressable: { minHeight: 56, borderRadius: 14, overflow: 'hidden' }, moduleRow: { minHeight: 56, flexDirection: 'row', alignItems: 'center', paddingLeft: 11, paddingRight: 3 }, moduleOrder: { width: 27, height: 27, borderRadius: 9, alignItems: 'center', justifyContent: 'center', marginRight: 12 }, moduleOrderText: { fontSize: 13, lineHeight: 17, fontWeight: '600' }, moduleTitle: { flex: 1, fontSize: 16, lineHeight: 21, fontWeight: '400' }, moduleDivider: { position: 'absolute', left: 50, right: 11, bottom: 0, height: StyleSheet.hairlineWidth }, moduleHint: { minHeight: 48, borderTopWidth: StyleSheet.hairlineWidth, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 13 }, moduleHintText: { flex: 1, fontSize: 13, lineHeight: 18, marginLeft: 2 }, });
+const styles = StyleSheet.create({ scroll: { flex: 1 }, content: { flexGrow: 1, paddingTop: 6, paddingBottom: 92 }, settingRow: { minHeight: 56, flexDirection: 'row', alignItems: 'center', paddingLeft: 13, paddingRight: 15, paddingVertical: 6 }, iconBox: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center', marginRight: 8 }, settingText: { flex: 1 }, settingTitle: { fontSize: 16.5, lineHeight: 22, fontWeight: '400', letterSpacing: -.18 }, settingDetail: { fontSize: 12.5, lineHeight: 17, marginTop: 1 }, chevron: { fontSize: 25, fontWeight: '300' }, choiceMark: { width: 40, height: 40 }, detailContent: { flexGrow: 1, paddingTop: 6, paddingBottom: 34 }, modulePage: { flex: 1, paddingTop: 6 }, field: { minHeight: 60, paddingHorizontal: 17, paddingVertical: 10 }, fieldMultiline: { minHeight: 94 }, fieldLabel: { fontSize: 12.5, lineHeight: 17, fontWeight: '400', marginBottom: 3 }, fieldInput: { fontSize: 16, lineHeight: 21, padding: 0 }, fieldInputMultiline: { minHeight: 54, textAlignVertical: 'top' }, message: { textAlign: 'center', fontSize: 13.5, lineHeight: 19, marginTop: 4, marginBottom: 12, paddingHorizontal: 24 }, providerControl: { marginHorizontal: 11, marginVertical: 10 }, choice: { minHeight: 64, paddingHorizontal: 17, flexDirection: 'row', alignItems: 'center', gap: 12 }, choiceTitle: { flex: 1, fontSize: 16, lineHeight: 21, fontWeight: '400' }, choiceControl: { width: 194 }, actionRow: { minHeight: 52, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 }, actionTitle: { fontSize: 16, lineHeight: 21, fontWeight: '500' }, moduleItem: { minHeight: 56, marginHorizontal: 6, borderRadius: 14 }, moduleItemActive: { zIndex: 2, shadowColor: '#000000', shadowOpacity: .12, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } }, moduleHighlight: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, borderRadius: 14 }, modulePressable: { minHeight: 56, borderRadius: 14, overflow: 'hidden' }, moduleRow: { minHeight: 56, flexDirection: 'row', alignItems: 'center', paddingLeft: 11, paddingRight: 3 }, moduleOrder: { width: 27, height: 27, borderRadius: 9, alignItems: 'center', justifyContent: 'center', marginRight: 12 }, moduleOrderText: { fontSize: 13, lineHeight: 17, fontWeight: '600' }, moduleTitle: { flex: 1, fontSize: 16, lineHeight: 21, fontWeight: '400' }, moduleDivider: { position: 'absolute', left: 50, right: 11, bottom: 0, height: StyleSheet.hairlineWidth }, moduleHint: { minHeight: 48, borderTopWidth: StyleSheet.hairlineWidth, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 13 }, moduleHintText: { flex: 1, fontSize: 13, lineHeight: 18, marginLeft: 2 }, });

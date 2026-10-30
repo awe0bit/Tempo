@@ -1,15 +1,5 @@
 export type TempoRoute = 'inbox' | 'today' | 'focus' | 'rss' | 'settings';
 
-export type TempoModuleID = 'today' | 'pomodoro' | 'rss';
-
-export type TempoModule = {
-  id: TempoModuleID;
-  version: string;
-  downloadSize: number;
-  installed: boolean;
-  delivery: 'bundled' | 'remote';
-};
-
 export type TaskStatus = 'open' | 'completed' | 'cancelled';
 export type TaskPriority = 'high' | 'medium' | 'low';
 
@@ -83,7 +73,6 @@ export type TempoSnapshot = {
   revision: number;
   capabilities?: string[];
   tasks: TempoTask[];
-  modules?: TempoModule[];
   pomodoro?: PomodoroState;
   displayedRemainingSeconds: number;
   sync?: {
