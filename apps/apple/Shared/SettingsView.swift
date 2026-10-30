@@ -607,6 +607,9 @@ private struct FeatureModulesSettingsView: View {
     case .pomodoro: "专注计时与统计"
     case .rss: "按来源阅读订阅内容"
     case .settings: "账户、同步和偏好"
+    #if os(iOS)
+    case .tools: "番茄钟与 RSS"
+    #endif
     }
   }
 }

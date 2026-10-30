@@ -4,6 +4,7 @@ import TempoRuntime
 import UIKit
 
 extension Notification.Name {
+  static let tempoOpenTool = Notification.Name("tempo.open-tool")
   static let tempoOpenDeveloperTools = Notification.Name("tempo.open-developer-tools")
   static let tempoRuntimeReady = Notification.Name("tempo.runtime-ready")
   static let tempoRuntimeNavigationDepth = Notification.Name("tempo.runtime-navigation-depth")
@@ -64,7 +65,7 @@ final class TempoNativeRegistry {
       "locale": Locale.current.identifier,
       "colorScheme": scheme,
       "revision": revision,
-      "capabilities": ["feedback.selection"],
+      "capabilities": ["feedback.selection", "navigation.tools"],
       "preferences": [
         "appearance": appearance,
         "haptics": defaults.object(forKey: TempoPreferenceKey.haptics) as? Bool ?? true,
@@ -72,7 +73,7 @@ final class TempoNativeRegistry {
         "weekStartsMonday": defaults.object(forKey: TempoPreferenceKey.weekStartsMonday) as? Bool ?? true,
         "showFestivals": defaults.object(forKey: TempoPreferenceKey.showFestivals) as? Bool ?? true,
         "showTaskIndicators": defaults.object(forKey: TempoPreferenceKey.showTaskIndicators) as? Bool ?? true,
-        "moduleOrder": defaults.string(forKey: TempoPreferenceKey.moduleOrder) ?? TempoModuleOrder.defaultValue,
+        "moduleOrder": TempoModuleOrder.encode(TempoModuleOrder.decode(defaults.string(forKey: TempoPreferenceKey.moduleOrder) ?? TempoModuleOrder.defaultValue)),
       ],
       "ambient": ambientSnapshot(),
     ]
@@ -131,6 +132,14 @@ final class TempoNativeRegistry {
   func perform(action: String, payload: [String: Any]) async throws -> Any {
     guard let store else { throw BridgeError.notReady }
     switch action {
+    case "tools.open":
+      let tool = payload.string("tool")
+      guard ["pomodoro", "rss", "home"].contains(tool) else {
+        throw BridgeError.invalidPayload("工具不存在")
+      }
+      NotificationCenter.default.post(name: .tempoOpenTool, object: nil, userInfo: ["tool": tool])
+      selectionFeedback()
+      return ["ok": true]
     case "task.add":
       let title = payload.string("title")
       let notes = payload.string("notes")

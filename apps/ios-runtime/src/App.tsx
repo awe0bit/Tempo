@@ -12,6 +12,7 @@ import { FocusScreen } from './screens/FocusScreen';
 import { RSSScreen } from './screens/RSSScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { TasksScreen } from './screens/TasksScreen';
+import { ToolsScreen } from './screens/ToolsScreen';
 import type { TempoRoute } from './types';
 
 type RuntimeProps = {
@@ -57,6 +58,7 @@ export default function App(props: RuntimeProps) {
 function RouteView({ tempo }: { tempo: ReturnType<typeof useTempo> }) {
   const { snapshot, route, theme, command, consumeCommand, perform } = tempo;
   if (!snapshot) return null;
+  if (route === 'tools') return <ToolsScreen theme={theme} snapshot={snapshot} perform={perform} />;
   if (route === 'inbox' || route === 'today') return <TasksScreen route={route} theme={theme} tasks={snapshot.tasks} supportsSelectionFeedback={snapshot.capabilities?.includes('feedback.selection') ?? false} command={command} consumeCommand={consumeCommand} perform={perform} />;
   if (route === 'focus') return <FocusScreen theme={theme} pomodoro={snapshot.pomodoro} remaining={snapshot.displayedRemainingSeconds} command={command} consumeCommand={consumeCommand} perform={perform} />;
   if (route === 'rss') return <RSSScreen theme={theme} articles={snapshot.rss?.articles ?? []} subscriptions={snapshot.rss?.subscriptions ?? []} folders={snapshot.rss?.folders ?? []} phase={snapshot.rss?.phase ?? 'idle'} command={command} consumeCommand={consumeCommand} perform={perform} />;

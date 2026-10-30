@@ -1,4 +1,4 @@
-export type TempoRoute = 'inbox' | 'today' | 'focus' | 'rss' | 'settings';
+export type TempoRoute = 'inbox' | 'today' | 'focus' | 'rss' | 'tools' | 'settings';
 
 export type TaskStatus = 'open' | 'completed' | 'cancelled';
 export type TaskPriority = 'high' | 'medium' | 'low';

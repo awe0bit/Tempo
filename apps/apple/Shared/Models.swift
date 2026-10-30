@@ -383,6 +383,9 @@ enum AppTab: String, CaseIterable, Identifiable, Hashable {
   case pomodoro
   case rss
   case settings
+  #if os(iOS)
+  case tools
+  #endif
 
   var id: String { rawValue }
 
@@ -393,6 +396,9 @@ enum AppTab: String, CaseIterable, Identifiable, Hashable {
     case .pomodoro: TempoL10n.string("番茄钟")
     case .rss: "RSS"
     case .settings: TempoL10n.string("设置")
+    #if os(iOS)
+    case .tools: TempoL10n.string("工具")
+    #endif
     }
   }
 
@@ -403,6 +409,9 @@ enum AppTab: String, CaseIterable, Identifiable, Hashable {
     case .pomodoro: "timer"
     case .rss: "dot.radiowaves.left.and.right"
     case .settings: "gearshape"
+    #if os(iOS)
+    case .tools: "square.grid.2x2"
+    #endif
     }
   }
 }

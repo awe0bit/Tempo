@@ -107,19 +107,32 @@ private struct TempoRuntimeChrome: View {
       }
 
       HStack(spacing: 10) {
+        if (route == .pomodoro || route == .rss) && !searchExpanded {
+          Button {
+            NotificationCenter.default.post(name: .tempoOpenTool, object: nil)
+            UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+          } label: {
+            Image(systemName: "chevron.left")
+              .font(.system(size: 17, weight: .semibold))
+              .foregroundStyle(TempoPalette.ink)
+              .frame(width: 48, height: 48)
+              .contentShape(Circle())
+          }
+          .buttonStyle(.plain)
+          .tempoFloatingSurface()
+          .accessibilityLabel(TempoL10n.string("返回工具"))
+        }
         if searchExpanded || route == .inbox || route == .rss {
           searchControl
         } else if route == .today {
           weatherButton
-        } else if route == .pomodoro {
-          chromeButton("chart.xyaxis.line", command: "statistics")
         }
 
         Spacer()
 
         if route == .pomodoro {
-          chromeButton("slider.horizontal.3", command: "timerSettings")
-        } else if route != .settings {
+          optionsMenu
+        } else if route != .settings && route != .tools {
           optionsMenu
             .allowsHitTesting(!searchExpanded)
         }
@@ -285,13 +298,14 @@ private struct TempoRuntimeChrome: View {
         commandButton("显示已完成", symbol: "checkmark.circle", command: "showCompleted")
         commandButton("隐藏已完成", symbol: "circle", command: "hideCompleted")
       case .pomodoro:
-        EmptyView()
+        commandButton("专注统计", symbol: "chart.xyaxis.line", command: "statistics")
+        commandButton("计时设置", symbol: "slider.horizontal.3", command: "timerSettings")
       case .rss:
         commandButton("添加订阅", symbol: "plus.circle", command: "addFeed")
         commandButton("刷新全部", symbol: "arrow.clockwise", command: "refreshFeeds")
         Divider()
         commandButton("全部标为已读", symbol: "checkmark.circle", command: "markAllRead")
-      case .settings:
+      case .settings, .tools:
         EmptyView()
       }
     } label: {
@@ -348,6 +362,7 @@ private extension AppTab {
     case .pomodoro: "focus"
     case .rss: "rss"
     case .settings: "settings"
+    case .tools: "tools"
     }
   }
 }

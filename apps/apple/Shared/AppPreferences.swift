@@ -13,15 +13,28 @@ enum TempoPreferenceKey {
 }
 
 enum TempoModuleOrder {
+  #if os(iOS)
+  static let defaultValue = "inbox,today,tools,settings"
+  #else
   static let defaultValue = AppTab.allCases.map(\.rawValue).joined(separator: ",")
+  #endif
 
   static func decode(_ rawValue: String) -> [AppTab] {
     var seen = Set<AppTab>()
     let decoded = rawValue
       .split(separator: ",")
-      .compactMap { AppTab(rawValue: String($0)) }
+      .compactMap { value -> AppTab? in
+        #if os(iOS)
+        if ["pomodoro", "focus", "rss"].contains(String(value)) { return .tools }
+        #endif
+        return AppTab(rawValue: String(value))
+      }
       .filter { seen.insert($0).inserted }
+    #if os(iOS)
+    let missing = [AppTab.inbox, .today, .tools, .settings].filter { !decoded.contains($0) }
+    #else
     let missing = AppTab.allCases.filter { !decoded.contains($0) }
+    #endif
     return decoded + missing
   }
 

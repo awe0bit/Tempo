@@ -63,7 +63,10 @@ private struct iOSRootView: View {
         TempoRuntimeScreen(route: selection)
 
         TempoNativeTabBar(
-          selection: $selection,
+          selection: Binding(
+            get: { selection == .pomodoro || selection == .rss ? .tools : selection },
+            set: { selection = $0 }
+          ),
           visibleTabs: visibleTabs
         ) {
           openDeveloperTools()
@@ -110,6 +113,7 @@ private struct iOSRootView: View {
       case "inbox": selection = .inbox
       case "pomodoro": selection = .pomodoro
       case "rss": selection = .rss
+      case "tools": selection = .tools
       case "settings": selection = .settings
       default: selection = .today
       }
@@ -126,6 +130,13 @@ private struct iOSRootView: View {
     }
     .onReceive(NotificationCenter.default.publisher(for: .tempoOpenDeveloperTools)) { _ in
       openDeveloperTools()
+    }
+    .onReceive(NotificationCenter.default.publisher(for: .tempoOpenTool)) { notification in
+      switch notification.userInfo?["tool"] as? String {
+      case "pomodoro": selection = .pomodoro
+      case "rss": selection = .rss
+      default: selection = .tools
+      }
     }
     .onReceive(NotificationCenter.default.publisher(for: .tempoRuntimeNavigationDepth)) { notification in
       runtimeNavigationDepth = notification.userInfo?["depth"] as? Int ?? 0

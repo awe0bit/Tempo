@@ -3,7 +3,7 @@
 这是 Tempo iOS 的可更新内容层，不是第二个独立客户端。
 
 - SwiftUI 保留 App 生命周期、系统导航、搜索、选项按钮、液态玻璃、权限、Keychain、App Group、小组件和 Live Activity。
-- React Native + TypeScript 承载收集箱、今天、番茄钟、RSS 和设置五个一级页面的业务内容。
+- React Native + TypeScript 承载收集箱、今天、工具和设置四个一级页面；番茄钟和 RSS 从工具页进入。
 - `expo-updates` 只发布与当前原生 runtime 兼容的 JavaScript、样式和静态资源；客户端会在启动和回到前台时静默检查、下载并自动应用，无需用户点按钮。
 - Swift 数据层是唯一事实来源；TypeScript 通过 `TempoNativeBridge` 读取快照、订阅变化并提交动作。
 - 原有 Swift 数据文件继续直接使用；迁移不会清空任务、专注记录、RSS 订阅或同步配置。
