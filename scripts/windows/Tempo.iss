@@ -1,6 +1,6 @@
 #define MyAppName "Tempo"
 #ifndef MyAppVersion
-  #define MyAppVersion "0.7.9"
+  #define MyAppVersion "0.8.0"
 #endif
 #define MyAppPublisher "FelixZoe"
 #define MyAppURL "https://github.com/FelixZoe/TEMPO"
