@@ -133,6 +133,8 @@ jobs:
                   build_ios=true ;;
                 apps/flutter/ios/TempoWidgets/*|apps/flutter/ios/Shared/TempoPomodoroAttributes.swift)
                   build_ios=true ;;
+                apps/flutter/ios/Runner/Assets.xcassets/*)
+                  build_ios=true ;;
                 apps/android/*)
                   build_android=true ;;
                 apps/flutter/*|scripts/windows/*)
@@ -140,7 +142,11 @@ jobs:
                 services/sync/*)
                   build_server=true ;;
                 assets/*|scripts/generate_brand_assets.py)
-                  mark_all_clients ;;
+                  if [[ "$apple_scope" == "ios" ]]; then
+                    build_ios=true
+                  else
+                    mark_all_clients
+                  fi ;;
               esac
             done < <(git diff --name-only "$base" "$GITHUB_SHA")
           fi

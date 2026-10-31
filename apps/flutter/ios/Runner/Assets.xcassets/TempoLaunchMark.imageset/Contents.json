@@ -1,16 +1,34 @@
 {
   "images" : [
     {
+      "filename" : "TempoLaunchMark-Light@1x.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "appearances" : [{ "appearance" : "luminosity", "value" : "dark" }],
       "filename" : "TempoLaunchMark@1x.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
+      "filename" : "TempoLaunchMark-Light@2x.png",
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "appearances" : [{ "appearance" : "luminosity", "value" : "dark" }],
       "filename" : "TempoLaunchMark@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
+      "filename" : "TempoLaunchMark-Light@3x.png",
+      "idiom" : "universal",
+      "scale" : "3x"
+    },
+    {
+      "appearances" : [{ "appearance" : "luminosity", "value" : "dark" }],
       "filename" : "TempoLaunchMark@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
@@ -21,6 +39,6 @@
     "version" : 1
   },
   "properties" : {
-    "template-rendering-intent" : "template"
+    "template-rendering-intent" : "original"
   }
 }

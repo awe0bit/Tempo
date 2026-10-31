@@ -50,8 +50,7 @@ def load_master(path: Path) -> Image.Image:
         return source.convert("RGB").resize((CANVAS, CANVAS), Image.Resampling.LANCZOS)
 
 
-def generate(repo: Path, dark_master: Image.Image, light_master: Image.Image,
-             transparent_mark: Image.Image | None = None) -> None:
+def generate(repo: Path, dark_master: Image.Image, light_master: Image.Image) -> None:
     # Android applies its own mask and motion. Inset the square master to keep
     # the full mark inside the adaptive icon's safe region.
     adaptive_mark = Image.new("RGB", (CANVAS, CANVAS), dark_master.getpixel((0, 0)))
@@ -77,25 +76,10 @@ def generate(repo: Path, dark_master: Image.Image, light_master: Image.Image,
     )
 
     ios = repo / "apps/flutter/ios/Runner/Assets.xcassets/AppIcon.appiconset"
-    ios_sizes = {
-        "Icon-App-20x20@1x.png": 20,
-        "Icon-App-20x20@2x.png": 40,
-        "Icon-App-20x20@3x.png": 60,
-        "Icon-App-29x29@1x.png": 29,
-        "Icon-App-29x29@2x.png": 58,
-        "Icon-App-29x29@3x.png": 87,
-        "Icon-App-40x40@1x.png": 40,
-        "Icon-App-40x40@2x.png": 80,
-        "Icon-App-40x40@3x.png": 120,
-        "Icon-App-60x60@2x.png": 120,
-        "Icon-App-60x60@3x.png": 180,
-        "Icon-App-76x76@1x.png": 76,
-        "Icon-App-76x76@2x.png": 152,
-        "Icon-App-83.5x83.5@2x.png": 167,
-        "Icon-App-1024x1024@1x.png": 1024,
-    }
-    for name, size in ios_sizes.items():
-        save_resized(dark_master.convert("RGB"), ios / name, size)
+    # Xcode generates device sizes from universal masters, including iOS 17's
+    # default icon. iOS 18+ selects the luminosity variant on the Home Screen.
+    save_resized(light_master.convert("RGB"), ios / "Icon-App-1024x1024@1x.png", CANVAS)
+    save_resized(dark_master.convert("RGB"), ios / "Icon-App-1024x1024-dark.png", CANVAS)
 
     macos = repo / "apps/flutter/macos/Runner/Assets.xcassets/AppIcon.appiconset"
     for size in (16, 32, 64, 128, 256, 512, 1024):
@@ -118,9 +102,9 @@ def generate(repo: Path, dark_master: Image.Image, light_master: Image.Image,
         repo
         / "apps/flutter/ios/Runner/Assets.xcassets/TempoLaunchMark.imageset"
     )
-    if transparent_mark is not None:
-        for scale, size in (("1x", 160), ("2x", 320), ("3x", 480)):
-            save_resized(transparent_mark, mark_set / f"TempoLaunchMark@{scale}.png", size)
+    for scale, size in (("1x", 160), ("2x", 320), ("3x", 480)):
+        save_resized(dark_master.convert("RGB"), mark_set / f"TempoLaunchMark@{scale}.png", size)
+        save_resized(light_master.convert("RGB"), mark_set / f"TempoLaunchMark-Light@{scale}.png", size)
 
     icon_path = repo / "apps/flutter/windows/runner/resources/app_icon.ico"
     icon_path.parent.mkdir(parents=True, exist_ok=True)
@@ -147,8 +131,7 @@ def main() -> None:
         if not args.font.is_file():
             raise SystemExit(f"Font not found: {args.font}")
         generate(repo, render_master(args.font, INK, PAPER),
-                 render_master(args.font, PAPER, INK),
-                 render_master(args.font, "#00000000", "#000000"))
+                 render_master(args.font, PAPER, INK))
     else:
         generate(repo,
                  load_master(args.master or repo / "assets/branding/tempo-icon-dark-source.png"),
