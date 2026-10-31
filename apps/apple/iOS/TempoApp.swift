@@ -47,6 +47,8 @@ private struct iOSRootView: View {
   @Environment(\.scenePhase) private var scenePhase
   @State private var selection = AppTab.today
   @State private var showingLaunchExperience = true
+  @State private var launchContentVisibility = 0.0
+  @State private var runtimeReadyForLaunch = false
   @State private var availableUpdate: TempoRelease?
   @State private var runtimeNavigationDepth = 0
   @State private var runtimeTabVisibility: CGFloat = 1
@@ -61,6 +63,9 @@ private struct iOSRootView: View {
         // Keep the Brownfield host's size stable while the native tab bar follows
         // React Navigation's interactive transition as an independent overlay.
         TempoRuntimeScreen(route: selection)
+          .opacity(launchContentVisibility)
+          .allowsHitTesting(!showingLaunchExperience)
+          .accessibilityHidden(showingLaunchExperience)
 
         TempoNativeTabBar(
           selection: Binding(
@@ -72,12 +77,15 @@ private struct iOSRootView: View {
           openDeveloperTools()
         }
         .frame(height: 49 + geometry.safeAreaInsets.bottom)
-        .opacity(runtimeTabVisibility)
+        .opacity(runtimeTabVisibility * launchContentVisibility)
         .allowsHitTesting(runtimeTabVisibility > 0.98 && !showingLaunchExperience)
-        .accessibilityHidden(runtimeTabVisibility < 0.98)
+        .accessibilityHidden(showingLaunchExperience || runtimeTabVisibility < 0.98)
 
         if showingLaunchExperience {
-          TempoLaunchExperience {
+          TempoLaunchExperience(
+            contentVisibility: $launchContentVisibility,
+            isContentReady: runtimeReadyForLaunch
+          ) {
             showingLaunchExperience = false
             Task { await TempoPermissionGate.shared.markAppReady() }
             checkForUpdates()
@@ -130,6 +138,9 @@ private struct iOSRootView: View {
     }
     .onReceive(NotificationCenter.default.publisher(for: .tempoOpenDeveloperTools)) { _ in
       openDeveloperTools()
+    }
+    .onReceive(NotificationCenter.default.publisher(for: .tempoRuntimeReady)) { _ in
+      runtimeReadyForLaunch = true
     }
     .onReceive(NotificationCenter.default.publisher(for: .tempoOpenTool)) { notification in
       switch notification.userInfo?["tool"] as? String {

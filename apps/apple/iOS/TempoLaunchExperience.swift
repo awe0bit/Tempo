@@ -2,6 +2,8 @@ import SwiftUI
 
 struct TempoLaunchExperience: View {
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
+  @Binding var contentVisibility: Double
+  let isContentReady: Bool
 
   let onFinished: () -> Void
 
@@ -13,6 +15,13 @@ struct TempoLaunchExperience: View {
   @State private var tipSeated = false
   @State private var highlightProgress: CGFloat = -0.5
   @State private var accentPulse = false
+  @State private var assemblyComplete = false
+  @State private var readinessDeadlineReached = false
+  @State private var handoffStarted = false
+
+  private var canReveal: Bool {
+    assemblyComplete && (isContentReady || readinessDeadlineReached)
+  }
 
   var body: some View {
     ZStack {
@@ -21,13 +30,25 @@ struct TempoLaunchExperience: View {
 
       assembledMark
         .frame(width: 236, height: 236)
-        .scaleEffect(reduceMotion ? 1 : revealingApp ? 1.06 : markVisible ? 1 : 0.96)
+        .scaleEffect(reduceMotion ? 1 : markVisible ? 1 : 0.96)
         .opacity(markVisible && !revealingApp ? 1 : 0)
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .ignoresSafeArea()
     .accessibilityHidden(true)
     .task { await playOnce() }
+    .task {
+      // Match the runtime host's recovery deadline, so a failed runtime still
+      // exposes its reload UI instead of leaving the user on the launch mark.
+      do {
+        try await Task.sleep(for: .seconds(8))
+        readinessDeadlineReached = true
+      } catch {}
+    }
+    .task(id: canReveal) {
+      guard canReveal else { return }
+      await revealContent()
+    }
   }
 
   private var symbol: some View {
@@ -42,23 +63,11 @@ struct TempoLaunchExperience: View {
     GeometryReader { proxy in
       let size = proxy.size
       ZStack(alignment: .topLeading) {
-        // Every layer uses the same original artwork and alpha mask. Once
-        // seated, the three pieces reconstruct the icon without visible seams.
+        // Render the entire white body once. One overlapping reveal path has
+        // no internal antialiased image boundary between crossbar and stem.
         symbol
-          .mask(LaunchCrossbarMask())
-          .mask(alignment: .leading) {
-            Rectangle().frame(width: size.width * crossbarProgress)
-          }
-          .offset(x: reduceMotion ? 0 : -12 * (1 - crossbarProgress))
-
-        symbol
-          .mask(alignment: .top) {
-            VStack(spacing: 0) {
-              Color.clear.frame(height: size.height * 0.44)
-              Rectangle().frame(height: size.height * 0.56 * stemProgress)
-              Spacer(minLength: 0)
-            }
-          }
+          .mask(LaunchBodyMask())
+          .mask(LaunchBodyReveal(crossbar: crossbarProgress, stem: stemProgress))
 
         Circle()
           .fill(TempoPalette.accent.opacity(accentPulse ? 0.15 : 0))
@@ -100,34 +109,80 @@ struct TempoLaunchExperience: View {
         tipSeated = true
         try await Task.sleep(for: .milliseconds(180))
       } else {
-        withAnimation(.timingCurve(0.22, 0.8, 0.2, 1, duration: 0.48)) {
+        withAnimation(.timingCurve(0.32, 0.08, 0.20, 1, duration: 0.90)) {
           markVisible = true
           crossbarProgress = 1
         }
-        try await Task.sleep(for: .milliseconds(160))
-        withAnimation(.timingCurve(0.22, 0.8, 0.2, 1, duration: 0.46)) {
+        try await Task.sleep(for: .milliseconds(380))
+        withAnimation(.timingCurve(0.28, 0.08, 0.20, 1, duration: 0.72)) {
           stemProgress = 1
         }
-        try await Task.sleep(for: .milliseconds(260))
-        withAnimation(.spring(response: 0.42, dampingFraction: 0.84)) {
+        try await Task.sleep(for: .milliseconds(480))
+        withAnimation(.spring(response: 0.46, dampingFraction: 0.88)) {
           tipSeated = true
           accentPulse = true
         }
-        try await Task.sleep(for: .milliseconds(300))
-        withAnimation(.easeOut(duration: 0.48)) {
+        try await Task.sleep(for: .milliseconds(360))
+        withAnimation(.easeInOut(duration: 0.58)) {
           accentPulse = false
           highlightProgress = 1.15
         }
-        try await Task.sleep(for: .milliseconds(530))
+        try await Task.sleep(for: .milliseconds(640))
       }
-      withAnimation(.easeInOut(duration: reduceMotion ? 0.18 : 0.36)) {
-        revealingApp = true
-      }
-      try await Task.sleep(for: .milliseconds(reduceMotion ? 200 : 380))
       try Task.checkCancellation()
-      onFinished()
+      assemblyComplete = true
     } catch {
       // A removed scene must not complete the launch of a replacement scene.
+    }
+  }
+
+  @MainActor
+  private func revealContent() async {
+    guard !handoffStarted else { return }
+    handoffStarted = true
+    withAnimation(.timingCurve(0.24, 0, 0.20, 1, duration: reduceMotion ? 0.22 : 0.62)) {
+      revealingApp = true
+      contentVisibility = 1
+    }
+    do {
+      try await Task.sleep(for: .milliseconds(reduceMotion ? 240 : 650))
+      try Task.checkCancellation()
+      onFinished()
+    } catch {}
+  }
+}
+
+private struct LaunchBodyMask: Shape {
+  func path(in rect: CGRect) -> Path {
+    Path { path in
+      path.move(to: .zero)
+      path.addLine(to: CGPoint(x: rect.width * 0.7, y: 0))
+      path.addLine(to: CGPoint(x: rect.width * 0.7, y: rect.height * 0.27))
+      path.addLine(to: CGPoint(x: rect.width * 0.60, y: rect.height * 0.44))
+      path.addLine(to: CGPoint(x: rect.width * 0.60, y: rect.height))
+      path.addLine(to: CGPoint(x: 0, y: rect.height))
+      path.closeSubpath()
+    }
+  }
+}
+
+private struct LaunchBodyReveal: Shape {
+  var crossbar: CGFloat
+  var stem: CGFloat
+
+  var animatableData: AnimatablePair<CGFloat, CGFloat> {
+    get { AnimatablePair(crossbar, stem) }
+    set { crossbar = newValue.first; stem = newValue.second }
+  }
+
+  func path(in rect: CGRect) -> Path {
+    Path { path in
+      // Map progress to the artwork's occupied width; the old full-canvas
+      // reveal spent most of its duration outside the visible crossbar.
+      path.addRect(CGRect(x: 0, y: 0, width: rect.width * (0.18 + 0.52 * crossbar), height: rect.height * 0.445))
+      if stem > 0 {
+        path.addRect(CGRect(x: 0, y: rect.height * 0.435, width: rect.width * 0.60, height: rect.height * 0.565 * stem))
+      }
     }
   }
 }
