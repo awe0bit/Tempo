@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
-"""Generate TEMPO brand assets from one reproducible serif glyph master."""
+"""Package TEMPO icon masters into native platform sizes.
+
+The checked-in image masters are the source of truth. --font retains the legacy
+glyph renderer for reproducibility; it is not used for the current app icon.
+"""
 
 from __future__ import annotations
 
 import argparse
+import base64
+from io import BytesIO
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -35,16 +41,40 @@ def save_resized(master: Image.Image, destination: Path, size: int) -> None:
     master.resize((size, size), Image.Resampling.LANCZOS).save(destination)
 
 
-def generate(repo: Path, font_path: Path) -> None:
-    dark_master = render_master(font_path, INK, PAPER)
-    light_master = render_master(font_path, PAPER, INK)
-    transparent_mark = render_master(font_path, "#00000000", "#000000")
-    adaptive_mark = render_master(font_path, "#00000000", PAPER)
+def load_master(path: Path) -> Image.Image:
+    with Image.open(path) as source:
+        if source.width != source.height or source.width < CANVAS:
+            raise ValueError(f"Icon master must be square and at least {CANVAS}px: {path}")
+        if source.mode == "RGBA" and source.getextrema()[3] != (255, 255):
+            raise ValueError(f"App icon master must be opaque: {path}")
+        return source.convert("RGB").resize((CANVAS, CANVAS), Image.Resampling.LANCZOS)
+
+
+def generate(repo: Path, dark_master: Image.Image, light_master: Image.Image,
+             transparent_mark: Image.Image | None = None) -> None:
+    # Android applies its own mask and motion. Inset the square master to keep
+    # the full mark inside the adaptive icon's safe region.
+    adaptive_mark = Image.new("RGB", (CANVAS, CANVAS), dark_master.getpixel((0, 0)))
+    inset_size = round(CANVAS * .78)
+    inset = (CANVAS - inset_size) // 2
+    adaptive_mark.paste(dark_master.resize((inset_size, inset_size), Image.Resampling.LANCZOS), (inset, inset))
 
     branding = repo / "apps/flutter/assets/branding"
     dark_master.convert("RGB").save(branding / "tempo-icon-master-black.png")
     light_master.convert("RGB").save(branding / "tempo-icon-master-white.png")
     dark_master.convert("RGB").save(repo / "apps/android/assets/icon/app_icon.png")
+    dark_master.convert("RGB").save(repo / "assets/tempo-icon.png")
+    encoded = BytesIO()
+    dark_master.save(encoded, format="PNG")
+    # Self-contained: SVG loaded as an <img> cannot fetch a sibling PNG.
+    data_uri = "data:image/png;base64," + base64.b64encode(encoded.getvalue()).decode("ascii")
+    (repo / "assets/tempo-icon.svg").write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">\n'
+        '  <title>Tempo icon</title>\n'
+        '  <desc>Satin T with a blue rhythm accent. Embedded raster master.</desc>\n'
+        f'  <image href="{data_uri}" width="1024" height="1024"/>\n'
+        '</svg>\n', encoding="utf-8"
+    )
 
     ios = repo / "apps/flutter/ios/Runner/Assets.xcassets/AppIcon.appiconset"
     ios_sizes = {
@@ -88,8 +118,9 @@ def generate(repo: Path, font_path: Path) -> None:
         repo
         / "apps/flutter/ios/Runner/Assets.xcassets/TempoLaunchMark.imageset"
     )
-    for scale, size in (("1x", 160), ("2x", 320), ("3x", 480)):
-        save_resized(transparent_mark, mark_set / f"TempoLaunchMark@{scale}.png", size)
+    if transparent_mark is not None:
+        for scale, size in (("1x", 160), ("2x", 320), ("3x", 480)):
+            save_resized(transparent_mark, mark_set / f"TempoLaunchMark@{scale}.png", size)
 
     icon_path = repo / "apps/flutter/windows/runner/resources/app_icon.ico"
     icon_path.parent.mkdir(parents=True, exist_ok=True)
@@ -106,12 +137,22 @@ def main() -> None:
     parser.add_argument(
         "--font",
         type=Path,
-        default=Path("C:/Windows/Fonts/NotoSerifSC-VF.ttf"),
+        help="Regenerate the legacy serif icon instead of packaging image masters",
     )
+    parser.add_argument("--master", type=Path, help="Opaque dark square image master")
+    parser.add_argument("--light-master", type=Path, help="Opaque light square image master")
     args = parser.parse_args()
-    if not args.font.is_file():
-        raise SystemExit(f"Noto Serif SC font not found: {args.font}")
-    generate(args.repo.resolve(), args.font.resolve())
+    repo = args.repo.resolve()
+    if args.font:
+        if not args.font.is_file():
+            raise SystemExit(f"Font not found: {args.font}")
+        generate(repo, render_master(args.font, INK, PAPER),
+                 render_master(args.font, PAPER, INK),
+                 render_master(args.font, "#00000000", "#000000"))
+    else:
+        generate(repo,
+                 load_master(args.master or repo / "assets/branding/tempo-icon-dark-source.png"),
+                 load_master(args.light_master or repo / "assets/branding/tempo-icon-light-source.png"))
 
 
 if __name__ == "__main__":
