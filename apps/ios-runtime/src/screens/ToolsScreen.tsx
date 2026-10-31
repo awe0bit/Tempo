@@ -1,9 +1,10 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { NativeSymbol, type NativeSymbolName } from '../components/NativeControls';
-import { Divider, NativeChromeGap, Screen, Section } from '../components/Primitives';
+import { NativeChromeGap, Screen } from '../components/Primitives';
 import { t } from '../i18n';
-import type { TempoTheme } from '../theme';
+import { radius, type TempoTheme } from '../theme';
 import type { TempoSnapshot } from '../types';
 
 export function ToolsScreen({ theme, snapshot, perform }: {
@@ -12,53 +13,84 @@ export function ToolsScreen({ theme, snapshot, perform }: {
   perform: <T>(action: string, payload?: Record<string, unknown>) => Promise<T>;
 }) {
   const timer = snapshot.pomodoro;
-  const tools: { id: string; symbol: NativeSymbolName; title: string; detail: string; status: string }[] = [
+  const { width, fontScale } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const columns = width >= 680 && fontScale < 1.4;
+  const seconds = Math.max(0, snapshot.displayedRemainingSeconds);
+  const time = `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${Math.floor(seconds % 60).toString().padStart(2, '0')}`;
+  const tools: { id: string; symbol: NativeSymbolName; title: string; detail: string; value: string; status: string; metric: string; action: string }[] = [
     {
       id: 'pomodoro', symbol: 'timer', title: t('settings.pomodoro'),
       detail: t('tools.focusDetail'),
-      status: timer?.status === 'running' ? t('focus.running') : timer?.status === 'paused' ? t('focus.paused') : '',
+      value: time,
+      metric: timer?.mode === 'shortBreak' ? t('focus.shortBreak') : timer?.mode === 'longBreak' ? t('focus.longBreak') : timer?.status === 'running' ? t('focus.running') : timer?.status === 'paused' ? t('focus.paused') : t('tools.readyFocus'),
+      status: t('focus.todayProgress', { completed: timer?.completedFocusSessions ?? 0, goal: timer?.dailyFocusGoal ?? 4 }),
+      action: t('tools.openFocus'),
     },
     {
       id: 'rss', symbol: 'dot.radiowaves.left.and.right', title: 'RSS',
       detail: t('tools.rssDetail'),
-      status: snapshot.rss?.unreadCount ? t('rss.unread', { count: snapshot.rss.unreadCount }) : '',
+      value: String(snapshot.rss?.unreadCount ?? 0),
+      metric: t('tools.unreadArticles'),
+      status: t('rss.sources', { count: snapshot.rss?.subscriptions.length ?? 0 }),
+      action: t('tools.openRSS'),
     },
   ];
 
   return <Screen theme={theme}>
     <NativeChromeGap title={t('tools.title')} theme={theme} />
-    <ScrollView alwaysBounceVertical contentContainerStyle={styles.content}>
-      <Section theme={theme}>
-        {tools.map((tool, index) => <View key={tool.id}>
+    <ScrollView alwaysBounceVertical showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, { paddingBottom: 49 + insets.bottom + 24 }]}>
+      <View style={[styles.grid, columns && styles.columns]}>
+        {tools.map((tool) =>
           <Pressable
+            key={tool.id}
             accessibilityRole="button"
-            accessibilityLabel={`${tool.title}${tool.status ? `, ${tool.status}` : ''}`}
+            accessibilityLabel={`${tool.title}, ${tool.value}, ${tool.metric}, ${tool.status}`}
+            accessibilityHint={tool.detail}
             onPress={() => { void perform('tools.open', { tool: tool.id }).catch(() => undefined); }}
-            style={({ pressed }) => [styles.row, pressed && { backgroundColor: theme.surfaceMuted }]}
+            style={({ pressed }) => [styles.card, columns && styles.columnCard, { backgroundColor: theme.groupedSurface, borderColor: theme.cardBorder }, pressed && styles.pressed]}
           >
-            <View style={[styles.icon, { backgroundColor: theme.accentSoft }]}>
-              <NativeSymbol name={tool.symbol} color={theme.accent} size={22} />
-            </View>
-            <View style={styles.copy}>
+            <View style={styles.cardHeader}>
+              <NativeSymbol name={tool.symbol} color={theme.accent} size={24} containerSize={30} />
               <Text style={[styles.title, { color: theme.text }]}>{tool.title}</Text>
-              <Text style={[styles.detail, { color: theme.secondary }]}>{tool.detail}</Text>
-              {tool.status ? <Text style={[styles.status, { color: theme.accent }]}>{tool.status}</Text> : null}
             </View>
-            <NativeSymbol name="chevron.right" color={theme.tertiary} size={13} containerSize={24} />
+            <View style={styles.metricRow}>
+              <Text adjustsFontSizeToFit minimumFontScale={0.65} numberOfLines={1} style={[styles.value, { color: theme.text }]}>{tool.value}</Text>
+              <View style={styles.metricCopy}>
+                <Text style={[styles.metric, { color: theme.secondary }]}>{tool.metric}</Text>
+                <Text style={[styles.status, { color: theme.secondary }]}>{tool.status}</Text>
+              </View>
+            </View>
+            <View style={styles.footer}>
+              <Text style={[styles.detail, { color: theme.secondary }]}>{tool.detail}</Text>
+              <View style={styles.actionRow}>
+                <Text style={[styles.action, { color: theme.accent }]}>{tool.action}</Text>
+                <NativeSymbol name="arrow.right" color={theme.accent} size={15} containerSize={22} />
+              </View>
+            </View>
           </Pressable>
-          {index < tools.length - 1 ? <Divider theme={theme} inset={74} /> : null}
-        </View>)}
-      </Section>
+        )}
+      </View>
     </ScrollView>
   </Screen>;
 }
 
 const styles = StyleSheet.create({
-  content: { paddingTop: 10, paddingBottom: 100 },
-  row: { minHeight: 86, paddingHorizontal: 17, paddingVertical: 15, flexDirection: 'row', alignItems: 'center', gap: 13 },
-  icon: { width: 44, height: 44, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
-  copy: { flex: 1 },
-  title: { fontSize: 17, lineHeight: 22, fontWeight: '600', letterSpacing: -.2 },
-  detail: { fontSize: 13, lineHeight: 18, marginTop: 3 },
-  status: { fontSize: 12, lineHeight: 17, marginTop: 5, fontWeight: '500' },
+  content: { flexGrow: 1, paddingTop: 22, paddingHorizontal: 20 },
+  grid: { gap: 18, width: '100%', maxWidth: 1000, alignSelf: 'center' },
+  columns: { flexDirection: 'row', alignItems: 'stretch' },
+  card: { padding: 22, minHeight: 224, borderRadius: radius.card, borderCurve: 'continuous', borderWidth: StyleSheet.hairlineWidth },
+  columnCard: { flex: 1 },
+  pressed: { opacity: .82, transform: [{ scale: .985 }] },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  title: { fontSize: 19, lineHeight: 25, fontWeight: '600', letterSpacing: -.3, flexShrink: 1 },
+  metricRow: { flexDirection: 'row', alignItems: 'center', gap: 16, marginTop: 22, marginBottom: 20 },
+  value: { fontSize: 40, lineHeight: 48, letterSpacing: -1.2, fontWeight: '500', fontVariant: ['tabular-nums'], flexShrink: 1 },
+  metricCopy: { flex: 1, minWidth: 0, gap: 3 },
+  metric: { fontSize: 13, lineHeight: 18 },
+  status: { fontSize: 12, lineHeight: 17 },
+  footer: { marginTop: 'auto', gap: 12 },
+  detail: { fontSize: 13, lineHeight: 19 },
+  actionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  action: { fontSize: 14, lineHeight: 20, fontWeight: '500' },
 });

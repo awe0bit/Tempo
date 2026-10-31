@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Animated, Keyboard, LayoutAnimation, PanResponder, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
+  Animated, Keyboard, LayoutAnimation, PanResponder, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SwipeListView } from 'react-native-swipe-list-view';
@@ -118,6 +118,7 @@ export function TasksScreen({ route, theme, tasks, supportsSelectionFeedback, co
 
         <View style={styles.listPanel}>
           <SwipeListView<TempoTask>
+            style={styles.flex}
             data={shown}
             directionalLockEnabled
             keyExtractor={(item) => item.id}
@@ -125,7 +126,7 @@ export function TasksScreen({ route, theme, tasks, supportsSelectionFeedback, co
             keyboardShouldPersistTaps="handled"
             ListHeaderComponent={shown.length ? (
               <View style={styles.groupHeader}>
-                <Text style={[styles.groupTitle, { color: theme.text }]}>{route === 'today' ? dayTitle(selectedDate) : query ? t('tasks.searchResults') : t('tasks.unorganized')}</Text>
+                <Text style={[styles.groupTitle, { color: theme.text }]}>{route === 'today' ? fullDate(selectedDate) : query ? t('tasks.searchResults') : t('tasks.unorganized')}</Text>
                 <Text style={[styles.groupCount, { color: theme.secondary }]}>{shown.length}</Text>
               </View>
             ) : null}
@@ -136,6 +137,7 @@ export function TasksScreen({ route, theme, tasks, supportsSelectionFeedback, co
                 task={item}
                 first={index === 0}
                 last={index === shown.length - 1}
+                showDate={route !== 'today'}
                 onOpen={() => openComposer(item)}
                 onToggle={() => perform('task.toggle', { id: item.id })}
               />
@@ -178,7 +180,7 @@ export function TasksScreen({ route, theme, tasks, supportsSelectionFeedback, co
               const task = shownByID.get(rowKey);
               if (task) void remove(task);
             }}
-            contentContainerStyle={shown.length ? styles.listContent : styles.emptyContent}
+            contentContainerStyle={[shown.length ? styles.listContent : styles.emptyContent, { paddingBottom: 49 + safeAreaInsets.bottom + 24 }]}
           />
         </View>
 
@@ -320,6 +322,9 @@ function CalendarStrip({ theme, selected, onSelect, progress, expanded, onExpand
   onExpandedChange: (expanded: boolean) => void;
 }) {
   const gridStart = useMemo(() => startOfWeek(new Date(selected.getFullYear(), selected.getMonth(), 1)), [selected.getFullYear(), selected.getMonth()]);
+  const { height: windowHeight } = useWindowDimensions();
+  const rowHeight = Math.max(34, Math.min(46, Math.floor((windowHeight * .46 - 108) / 6)));
+  const expansionDistance = rowHeight * 5;
   const days = useMemo(() => Array.from({ length: 42 }, (_, index) => addDays(gridStart, index)), [gridStart]);
   const selectedIndex = Math.max(0, days.findIndex((date) => sameDay(date, selected)));
   const selectedRow = Math.floor(selectedIndex / 7);
@@ -338,26 +343,34 @@ function CalendarStrip({ theme, selected, onSelect, progress, expanded, onExpand
       progress.stopAnimation();
       dragStart.current = liveProgress.current;
     },
-    onPanResponderMove: (_, gesture) => progress.setValue(Math.max(0, Math.min(1, dragStart.current + gesture.dy / 210))),
+    onPanResponderMove: (_, gesture) => progress.setValue(Math.max(0, Math.min(1, dragStart.current + gesture.dy / expansionDistance))),
     onPanResponderRelease: (_, gesture) => {
-      const position = Math.max(0, Math.min(1, dragStart.current + gesture.dy / 210));
+      const position = Math.max(0, Math.min(1, dragStart.current + gesture.dy / expansionDistance));
       onExpandedChange(gesture.vy > .22 ? true : gesture.vy < -.22 ? false : position >= .5);
     },
     onPanResponderTerminationRequest: () => false,
     onPanResponderTerminate: (_, gesture) => {
-      const position = Math.max(0, Math.min(1, dragStart.current + gesture.dy / 210));
+      const position = Math.max(0, Math.min(1, dragStart.current + gesture.dy / expansionDistance));
       onExpandedChange(position >= .5);
     },
-  }), [onExpandedChange, progress]);
-  const height = progress.interpolate({ inputRange: [0, 1], outputRange: [88, 298] });
-  const gridHeight = progress.interpolate({ inputRange: [0, 1], outputRange: [42, 252] });
-  const gridOffset = progress.interpolate({ inputRange: [0, 1], outputRange: [-selectedRow * 42, 0] });
+  }), [onExpandedChange, progress, expansionDistance]);
+  const height = progress.interpolate({ inputRange: [0, 1], outputRange: [108 + rowHeight, 108 + rowHeight * 6] });
+  const gridHeight = progress.interpolate({ inputRange: [0, 1], outputRange: [rowHeight, rowHeight * 6] });
+  const gridOffset = progress.interpolate({ inputRange: [0, 1], outputRange: [-selectedRow * rowHeight, 0] });
   return (
     <Animated.View {...pan.panHandlers} style={[styles.calendar, { height, backgroundColor: theme.groupedSurface, borderColor: theme.cardBorder }]}>
+      <View style={styles.monthToolbar}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('tasks.previousMonth')} onPress={() => onSelect(shiftMonth(selected, -1))} style={({ pressed }) => [styles.monthButton, pressed && { opacity: .5 }]}><NativeSymbol name="chevron.left" color={theme.secondary} size={14} containerSize={28} /></Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel={expanded ? t('tasks.collapseCalendar') : t('tasks.expandCalendar')} accessibilityState={{ expanded }} onPress={() => onExpandedChange(!expanded)} style={styles.monthTitleButton}>
+          <Text style={[styles.monthTitle, { color: theme.text }]}>{formatDate(selected, { year: 'numeric', month: 'long' })}</Text>
+          <NativeSymbol name={expanded ? 'chevron.up' : 'chevron.down'} color={theme.tertiary} size={10} containerSize={18} />
+        </Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('tasks.nextMonth')} onPress={() => onSelect(shiftMonth(selected, 1))} style={({ pressed }) => [styles.monthButton, pressed && { opacity: .5 }]}><NativeSymbol name="chevron.right" color={theme.secondary} size={14} containerSize={28} /></Pressable>
+      </View>
       <View style={styles.weekdayRow}>{weekdayLabels().map((day) => <Text key={day} style={[styles.weekday, { color: theme.secondary }]}>{day}</Text>)}</View>
       <Animated.View style={[styles.calendarGridViewport, { height: gridHeight }]}>
         <Animated.View style={{ transform: [{ translateY: gridOffset }] }}>
-          {[0, 1, 2, 3, 4, 5].map((row) => <View key={row} style={styles.weekRow}>{days.slice(row * 7, row * 7 + 7).map((date) => <DateCell key={date.toISOString()} date={date} selected={sameDay(date, selected)} inCurrentMonth={date.getMonth() === selected.getMonth() && date.getFullYear() === selected.getFullYear()} theme={theme} onPress={() => onSelect(date)} />)}</View>)}
+          {[0, 1, 2, 3, 4, 5].map((row) => <View key={row} style={[styles.weekRow, { height: rowHeight }]}>{days.slice(row * 7, row * 7 + 7).map((date) => <DateCell key={date.toISOString()} date={date} selected={sameDay(date, selected)} inCurrentMonth={date.getMonth() === selected.getMonth() && date.getFullYear() === selected.getFullYear()} theme={theme} onPress={() => onSelect(date)} />)}</View>)}
         </Animated.View>
       </Animated.View>
       <View
@@ -377,7 +390,7 @@ function DateCell({ date, selected, inCurrentMonth, theme, onPress }: { date: Da
   return <Pressable onPress={onPress} style={({ pressed }) => [styles.dateCell, pressed && { opacity: .55 }]}><View style={[styles.dateDot, selected && { backgroundColor: theme.accent }]}><Text style={[styles.dateNumber, { color: selected ? '#fff' : inCurrentMonth ? theme.text : theme.tertiary, opacity: selected || inCurrentMonth ? 1 : .48 }]}>{date.getDate()}</Text></View></Pressable>;
 }
 
-function TaskRow({ task, theme, first, last, onOpen, onToggle, swipeAnimatedValue }: { task: TempoTask; theme: TempoTheme; first: boolean; last: boolean; onOpen: () => void; onToggle: () => void; swipeAnimatedValue?: Animated.Value }) {
+function TaskRow({ task, theme, first, last, showDate = true, onOpen, onToggle, swipeAnimatedValue }: { task: TempoTask; theme: TempoTheme; first: boolean; last: boolean; showDate?: boolean; onOpen: () => void; onToggle: () => void; swipeAnimatedValue?: Animated.Value }) {
   const priorityColor = task.priority === 'high' ? theme.accent : theme.secondary;
   const contentOpacity = swipeAnimatedValue?.interpolate({ inputRange: [-132, -76, 0], outputRange: [.9, .96, 1], extrapolate: 'clamp' }) ?? 1;
   const contentScale = swipeAnimatedValue?.interpolate({ inputRange: [-132, -76, 0], outputRange: [.985, .993, 1], extrapolate: 'clamp' }) ?? 1;
@@ -389,7 +402,7 @@ function TaskRow({ task, theme, first, last, onOpen, onToggle, swipeAnimatedValu
           <View style={styles.titleLine}>{task.priority ? <View style={[styles.priorityDot, { backgroundColor: priorityColor }]} /> : null}<Text numberOfLines={1} style={[styles.taskTitle, { color: task.status === 'completed' ? theme.secondary : theme.text, textDecorationLine: task.status === 'completed' ? 'line-through' : 'none' }]}>{task.title}</Text></View>
           {task.notes ? <Text numberOfLines={1} style={[styles.taskNotes, { color: theme.secondary }]}>{task.notes}</Text> : null}
         </View>
-        {task.startAt ? <Text style={[styles.taskDate, { color: theme.accent }]}>{sameDay(task.startAt, new Date()) ? t('tasks.today') : shortDate(task.startAt)}</Text> : null}
+        {showDate && task.startAt ? <Text style={[styles.taskDate, { color: theme.accent }]}>{sameDay(task.startAt, new Date()) ? t('tasks.today') : shortDate(task.startAt)}</Text> : null}
       </Pressable>
       {!last ? <View style={[styles.rowDivider, { backgroundColor: theme.separator }]} /> : null}
     </Animated.View>
@@ -500,14 +513,18 @@ function EmptyState({ theme, route, searching }: { theme: TempoTheme; route: str
 function sameDay(value: string | Date | null | undefined, compare: Date) { if (!value) return false; const date = typeof value === 'string' ? new Date(value) : value; return date.getFullYear() === compare.getFullYear() && date.getMonth() === compare.getMonth() && date.getDate() === compare.getDate(); }
 function addDays(date: Date, count: number) { const result = new Date(date); result.setDate(result.getDate() + count); return result; }
 function startOfWeek(date: Date) { return addDays(date, -((date.getDay() + 6) % 7)); }
-function dayTitle(date: Date) { const today = new Date(); if (sameDay(date, today)) return t('tasks.today'); if (sameDay(date, addDays(today, -1))) return t('tasks.yesterday'); if (sameDay(date, addDays(today, 1))) return t('tasks.tomorrow'); return formatDate(date, { month: 'long', day: 'numeric' }); }
+function shiftMonth(date: Date, amount: number) { const next = new Date(date.getFullYear(), date.getMonth() + amount, 1); next.setDate(Math.min(date.getDate(), new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate())); return next; }
 function fullDate(date: Date) { return formatDate(date, { month: 'long', day: 'numeric', weekday: 'long' }); }
 function shortDate(value: string) { return formatDate(value, { month: 'numeric', day: 'numeric' }); }
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  calendar: { overflow: 'hidden', marginTop: 10, marginHorizontal: 18, paddingHorizontal: 12, borderRadius: radius.card, borderCurve: 'continuous', borderWidth: StyleSheet.hairlineWidth },
-  weekdayRow: { height: 24, flexDirection: 'row', alignItems: 'center' },
+  calendar: { overflow: 'hidden', marginTop: 20, marginHorizontal: 20, paddingHorizontal: 10, paddingVertical: 8, borderRadius: radius.card, borderCurve: 'continuous', borderWidth: StyleSheet.hairlineWidth },
+  monthToolbar: { height: 40, flexDirection: 'row', alignItems: 'center', marginBottom: 0 },
+  monthButton: { width: 44, height: 40, alignItems: 'center', justifyContent: 'center' },
+  monthTitleButton: { flex: 1, minHeight: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  monthTitle: { fontSize: 15, lineHeight: 21, fontWeight: '600' },
+  weekdayRow: { height: 28, flexDirection: 'row', alignItems: 'center' },
   weekday: { flex: 1, textAlign: 'center', fontSize: 12, fontWeight: '500' },
   calendarGridViewport: { overflow: 'hidden' },
   weekRow: { height: 42, flexDirection: 'row' },
@@ -517,10 +534,10 @@ const styles = StyleSheet.create({
   calendarHandleTouch: { height: 22, alignItems: 'center', justifyContent: 'center' },
   calendarHandleButton: { width: 104, height: 22, alignItems: 'center', justifyContent: 'center' },
   calendarHandle: { width: 34, height: 4, borderRadius: 2, opacity: .38 },
-  listPanel: { flex: 1, marginTop: 8, marginBottom: 78 },
+  listPanel: { flex: 1, marginTop: 18 },
   listContent: { paddingHorizontal: 18, paddingBottom: 18 },
   emptyContent: { flexGrow: 1, paddingHorizontal: 18 },
-  groupHeader: { height: 44, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 6 },
+  groupHeader: { minHeight: 46, paddingBottom: 12, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 6, gap: 12 },
   groupTitle: { flex: 1, fontSize: 15, fontWeight: '600', letterSpacing: -.12 },
   groupCount: { minWidth: 26, height: 24, borderRadius: 12, textAlign: 'center', textAlignVertical: 'center', fontSize: 12, fontWeight: '600' },
   groupTop: { borderTopLeftRadius: radius.card, borderTopRightRadius: radius.card },
@@ -541,7 +558,7 @@ const styles = StyleSheet.create({
   taskNotes: { fontSize: 12.5, lineHeight: 17, marginTop: 2 },
   taskDate: { fontSize: 11.5, lineHeight: 16, fontWeight: '600', marginLeft: 12 },
   rowDivider: { position: 'absolute', height: StyleSheet.hairlineWidth, left: 47, right: 15, bottom: 0 },
-  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 26, paddingBottom: 34 },
+  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 26, paddingVertical: 20 },
   emptyIcon: { fontSize: 38, lineHeight: 44, fontWeight: '200' },
   emptyTitle: { fontSize: 18, fontWeight: '600', marginTop: 10 },
   emptyBody: { fontSize: 14, marginTop: 5 },
