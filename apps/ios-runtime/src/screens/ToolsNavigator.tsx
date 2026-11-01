@@ -3,6 +3,7 @@ import { DarkTheme, DefaultTheme, NavigationContainer, StackActions, useNavigati
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import type { useTempo } from '../hooks/useTempo';
+import { ToolChromeTransition } from '../components/ToolChromeTransition';
 import { initialToolState, toolRouteTransition, type ToolRoute } from '../toolNavigation';
 import { FocusScreen } from './FocusScreen';
 import { RSSScreen } from './RSSScreen';
@@ -20,6 +21,7 @@ export function ToolsNavigator({ tempo, route }: { tempo: Tempo; route: ToolRout
   requestedRoute.current = route;
   // Direct links still have a tools home beneath the destination to return to.
   const [initialState] = useState(() => initialToolState(route));
+  const supportsChromeProgress = snapshot?.capabilities?.includes('navigation.toolChromeProgress') ?? false;
   const navigationTheme = useMemo(() => {
     const base = theme.dark ? DarkTheme : DefaultTheme;
     return { ...base, colors: { ...base.colors, primary: theme.accent, background: theme.background, card: theme.background, text: theme.text, border: theme.separator } };
@@ -72,10 +74,10 @@ export function ToolsNavigator({ tempo, route }: { tempo: Tempo; route: ToolRout
         {() => <ToolsScreen theme={theme} snapshot={snapshot} perform={openTool} />}
       </Stack.Screen>
       <Stack.Screen name="focus">
-        {() => <FocusScreen theme={theme} pomodoro={snapshot.pomodoro} remaining={snapshot.displayedRemainingSeconds} command={route === 'focus' ? command : undefined} consumeCommand={consumeCommand} perform={perform} />}
+        {({ navigation: screenNavigation, route: screenRoute }) => <ToolChromeTransition tool="focus" navigation={screenNavigation} enabled={supportsChromeProgress} initiallyVisible={screenRoute.key === initialState.routes[1]?.key}><FocusScreen theme={theme} pomodoro={snapshot.pomodoro} remaining={snapshot.displayedRemainingSeconds} command={route === 'focus' ? command : undefined} consumeCommand={consumeCommand} perform={perform} /></ToolChromeTransition>}
       </Stack.Screen>
       <Stack.Screen name="rss">
-        {() => <RSSScreen theme={theme} articles={snapshot.rss?.articles ?? []} subscriptions={snapshot.rss?.subscriptions ?? []} folders={snapshot.rss?.folders ?? []} phase={snapshot.rss?.phase ?? 'idle'} command={route === 'rss' ? command : undefined} consumeCommand={consumeCommand} perform={perform} />}
+        {({ navigation: screenNavigation, route: screenRoute }) => <ToolChromeTransition tool="rss" navigation={screenNavigation} enabled={supportsChromeProgress} initiallyVisible={screenRoute.key === initialState.routes[1]?.key}><RSSScreen theme={theme} articles={snapshot.rss?.articles ?? []} subscriptions={snapshot.rss?.subscriptions ?? []} folders={snapshot.rss?.folders ?? []} phase={snapshot.rss?.phase ?? 'idle'} command={route === 'rss' ? command : undefined} consumeCommand={consumeCommand} perform={perform} /></ToolChromeTransition>}
       </Stack.Screen>
     </Stack.Navigator>
   </NavigationContainer>;

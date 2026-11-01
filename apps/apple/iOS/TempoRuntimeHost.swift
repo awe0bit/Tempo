@@ -23,7 +23,7 @@ struct TempoRuntimeScreen: View {
         .ignoresSafeArea(edges: .bottom)
       }
 
-      TempoRuntimeChrome(route: route)
+      TempoRuntimeChrome(selection: route)
 
       if !runtimeReady {
         runtimePlaceholder
@@ -96,8 +96,19 @@ private struct TempoRuntimeChrome: View {
   @StateObject private var ambientStore = TodayAmbientStore()
   @State private var searchExpanded = false
   @State private var searchText = ""
+  @State private var retainedTool: AppTab?
+  @State private var progressTool: AppTab?
+  @State private var toolVisibility = 0.0
   @FocusState private var searchFocused: Bool
-  let route: AppTab
+  let selection: AppTab
+
+  private var isToolContext: Bool {
+    selection == .tools || selection == .pomodoro || selection == .rss
+  }
+
+  // Keep the departing controls mounted while the page is being popped.
+  private var route: AppTab { isToolContext ? retainedTool ?? selection : selection }
+  private var chromeVisibility: Double { isToolContext ? toolVisibility : 1 }
 
   var body: some View {
     ZStack(alignment: .top) {
@@ -141,11 +152,56 @@ private struct TempoRuntimeChrome: View {
       }
       .padding(.horizontal, 18)
       .padding(.top, 8)
+      .opacity(chromeVisibility)
+      .allowsHitTesting(chromeVisibility > 0.98 && selection != .tools)
+      .accessibilityHidden(chromeVisibility < 0.98 || selection == .tools)
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-    .onChange(of: route) { _, _ in
+    .onAppear {
+      if selection == .pomodoro || selection == .rss {
+        retainedTool = selection
+        toolVisibility = 1
+      }
+    }
+    .onChange(of: selection) { previous, current in
       if searchExpanded || !searchText.isEmpty {
         closeSearch()
+      }
+      if current == .pomodoro || current == .rss {
+        retainedTool = current
+        // Compatible fallback for an older OTA bundle without progress events.
+        // A live native-stack progress stream always takes precedence.
+        if previous == .tools && progressTool != current {
+          toolVisibility = 0
+          withAnimation(.easeInOut(duration: 0.28)) { toolVisibility = 1 }
+        } else if previous != .tools {
+          toolVisibility = 1
+        }
+      } else if current == .tools {
+        if progressTool != previous {
+          withAnimation(.easeInOut(duration: 0.28)) { toolVisibility = 0 }
+        }
+      } else {
+        retainedTool = nil
+        progressTool = nil
+        toolVisibility = 0
+      }
+    }
+    .onReceive(NotificationCenter.default.publisher(for: .tempoToolChromeProgress)) { notification in
+      guard isToolContext,
+            let name = notification.userInfo?["route"] as? String,
+            let progress = (notification.userInfo?["progress"] as? NSNumber)?.doubleValue,
+            progress.isFinite else { return }
+      let tool: AppTab = name == "focus" ? .pomodoro : .rss
+      guard selection == .tools || selection == tool else { return }
+      // Values are already animated by UIKit's navigation transition. Adding
+      // a second SwiftUI animation would lag behind an interactive back swipe.
+      var transaction = Transaction(animation: nil)
+      transaction.disablesAnimations = true
+      withTransaction(transaction) {
+        retainedTool = tool
+        progressTool = tool
+        toolVisibility = min(max(progress, 0), 1)
       }
     }
     .task(id: route) {

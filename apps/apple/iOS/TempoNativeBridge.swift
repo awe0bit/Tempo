@@ -9,6 +9,7 @@ extension Notification.Name {
   static let tempoRuntimeReady = Notification.Name("tempo.runtime-ready")
   static let tempoRuntimeNavigationDepth = Notification.Name("tempo.runtime-navigation-depth")
   static let tempoRuntimeNavigationProgress = Notification.Name("tempo.runtime-navigation-progress")
+  static let tempoToolChromeProgress = Notification.Name("tempo.tool-chrome-progress")
 }
 
 @MainActor
@@ -65,7 +66,7 @@ final class TempoNativeRegistry {
       "locale": Locale.current.identifier,
       "colorScheme": scheme,
       "revision": revision,
-      "capabilities": ["feedback.selection", "navigation.tools"],
+      "capabilities": ["feedback.selection", "navigation.tools", "navigation.toolChromeProgress"],
       "preferences": [
         "appearance": appearance,
         "haptics": defaults.object(forKey: TempoPreferenceKey.haptics) as? Bool ?? true,
@@ -379,6 +380,16 @@ final class TempoNativeRegistry {
     }
     if type == "tempo.navigation-progress" {
       let progress = (message["progress"] as? NSNumber)?.doubleValue ?? 0
+      if message["scope"] as? String == "toolChrome" {
+        guard let route = message["route"] as? String,
+              ["focus", "rss"].contains(route), progress.isFinite else { return }
+        NotificationCenter.default.post(
+          name: .tempoToolChromeProgress,
+          object: nil,
+          userInfo: ["route": route, "progress": min(max(progress, 0), 1)]
+        )
+        return
+      }
       NotificationCenter.default.post(
         name: .tempoRuntimeNavigationProgress,
         object: nil,

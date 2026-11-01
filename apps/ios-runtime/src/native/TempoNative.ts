@@ -80,6 +80,10 @@ export const tempoNative = {
     Brownfield.sendMessage({ type: 'tempo.navigation-progress', progress });
   },
 
+  setToolChromeProgress(route: 'focus' | 'rss', progress: number) {
+    Brownfield.sendMessage({ type: 'tempo.navigation-progress', scope: 'toolChrome', route, progress });
+  },
+
   bootstrap(): Promise<TempoSnapshot> {
     return request<TempoSnapshot>({ type: 'tempo.bootstrap' });
   },

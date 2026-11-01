@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { CommonActions, StackActions, StackRouter } from '@react-navigation/routers';
-import { initialToolState, toolRouteTransition } from '../src/toolNavigation.ts';
+import { initialToolState, toolRouteTransition, toolChromeVisibility } from '../src/toolNavigation.ts';
 
 const router = StackRouter({ initialRouteName: 'tools' });
 const config = {
@@ -57,4 +57,30 @@ test('failed optimistic entry can pop back to the existing home', () => {
   const returned = router.getStateForAction(pushed, StackActions.popToTop(), config);
   assert.equal(returned.routes[0].key, home.routes[0].key);
   assert.deepEqual(names(returned), ['tools']);
+});
+
+test('chrome fades in with push and out with pop', () => {
+  const progress = [0, .1, .25, .5, .75, 1];
+  assert.deepEqual(progress.map((p) => toolChromeVisibility(p, false)), progress);
+  assert.deepEqual(progress.map((p) => toolChromeVisibility(p, true)), [1, .9, .75, .5, .25, 0]);
+});
+
+test('a cancelled back swipe restores chrome continuously', () => {
+  const gesture = [0, .25, .6, .35, .1, 0];
+  assert.deepEqual(gesture.map((p) => toolChromeVisibility(p, true)), [1, .75, .4, .65, .9, 1]);
+});
+
+test('chrome opacity stays valid on overshoot and invalid values', () => {
+  assert.equal(toolChromeVisibility(-1, false), 0);
+  assert.equal(toolChromeVisibility(2, false), 1);
+  assert.equal(toolChromeVisibility(NaN, false), 0);
+  assert.equal(toolChromeVisibility(Infinity, true), 1);
+});
+
+test('reopening a tool after a cold direct link starts a fresh fade', () => {
+  const initial = restore('focus');
+  const firstKey = initial.routes[1].key;
+  const home = request(initial, 'tools');
+  const reopened = request(home, 'focus');
+  assert.notEqual(reopened.routes[1].key, firstKey);
 });
