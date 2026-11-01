@@ -435,7 +435,7 @@ body {
   }
 
   .VPNavBar:not(.home.top) .content-body {
-    background: transparent;
+    background: transparent !important;
   }
 
   .VPNavBarSearch {
