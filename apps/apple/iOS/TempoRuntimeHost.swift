@@ -2,33 +2,26 @@ import SwiftUI
 import TempoRuntime
 import UIKit
 
-final class TempoRuntimeAppDelegate: NSObject, UIApplicationDelegate {
-  func application(
-    _ application: UIApplication,
-    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
-  ) -> Bool {
-    ReactNativeHostManager.shared.initialize()
-    return true
-  }
-}
-
 struct TempoRuntimeScreen: View {
   let route: AppTab
+  @State private var runtimeMounted = false
   @State private var runtimeReady = false
   @State private var startupTimedOut = false
   @State private var runtimeGeneration = UUID()
 
   var body: some View {
     ZStack(alignment: .top) {
-      ReactNativeView(
-        moduleName: "main",
-        initialProps: [
-          "route": route.runtimeRoute,
-          "locale": Locale.current.identifier,
-        ]
-      )
-      .id(runtimeGeneration)
-      .ignoresSafeArea(edges: .bottom)
+      if runtimeMounted {
+        ReactNativeView(
+          moduleName: "main",
+          initialProps: [
+            "route": route.runtimeRoute,
+            "locale": Locale.current.identifier,
+          ]
+        )
+        .id(runtimeGeneration)
+        .ignoresSafeArea(edges: .bottom)
+      }
 
       TempoRuntimeChrome(route: route)
 
@@ -37,8 +30,17 @@ struct TempoRuntimeScreen: View {
       }
     }
     .task(id: runtimeGeneration) {
+      runtimeMounted = false
       runtimeReady = false
       startupTimedOut = false
+      // Let the native launch overlay commit its first frame before creating
+      // the Expo factory/root view. Startup work must not delay that frame.
+      do {
+        try await Task.sleep(for: .milliseconds(120))
+        try Task.checkCancellation()
+      } catch { return }
+      ReactNativeHostManager.shared.initialize()
+      runtimeMounted = true
       try? await Task.sleep(for: .seconds(8))
       guard !Task.isCancelled, !runtimeReady else { return }
       startupTimedOut = true

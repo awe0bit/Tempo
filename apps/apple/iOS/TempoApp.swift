@@ -3,10 +3,7 @@ import UIKit
 
 @main
 struct TempoApp: App {
-  @UIApplicationDelegateAdaptor(TempoRuntimeAppDelegate.self) private var runtimeDelegate
-  @StateObject private var store = AppStore()
-  @StateObject private var rssStore = RSSStore()
-  @StateObject private var updateChecker = AppUpdateChecker()
+  @State private var services = TempoAppServices()
 
   init() {
     // Configure the selected state before SwiftUI creates the first tab bar.
@@ -27,32 +24,76 @@ struct TempoApp: App {
 
   var body: some Scene {
     WindowGroup {
-      iOSRootView()
-        .environmentObject(store)
-        .environmentObject(rssStore)
-        .environmentObject(updateChecker)
+      TempoStartupView(services: services)
     }
     .backgroundTask(.appRefresh(RSSBackgroundRefresh.identifier)) {
-      await rssStore.refresh()
+      await services.rssStore.refresh()
       RSSBackgroundRefresh.schedule()
     }
   }
 }
 
+// Keep disk/keychain hydration and system-surface work out of the first-frame
+// path. The launch overlay does not depend on any application services.
+@MainActor
+private final class TempoAppServices {
+  lazy var store = AppStore()
+  lazy var rssStore = RSSStore()
+  lazy var updateChecker = AppUpdateChecker()
+}
+
+private struct TempoStartupView: View {
+  let services: TempoAppServices
+  @State private var contentMounted = false
+  @State private var showingLaunchExperience = true
+  @State private var contentVisibility = 0.0
+  @State private var runtimeReady = false
+  @AppStorage(TempoPreferenceKey.appearance) private var appearance = "system"
+
+  var body: some View {
+    ZStack {
+      TempoPalette.background.ignoresSafeArea()
+      if contentMounted {
+        iOSRootView(
+          showingLaunchExperience: showingLaunchExperience,
+          launchContentVisibility: contentVisibility
+        )
+        .environmentObject(services.store)
+        .environmentObject(services.rssStore)
+        .environmentObject(services.updateChecker)
+      }
+      if showingLaunchExperience {
+        TempoLaunchExperience(contentVisibility: $contentVisibility, isContentReady: runtimeReady) {
+          showingLaunchExperience = false
+        }
+        .zIndex(10)
+      }
+    }
+    .task {
+      // Yield a render interval so the launch artwork is already on screen
+      // before local hydration or the brownfield runtime can occupy the main thread.
+      do { try await Task.sleep(for: .milliseconds(120)) } catch { return }
+      contentMounted = true
+    }
+    .onReceive(NotificationCenter.default.publisher(for: .tempoRuntimeReady)) { _ in
+      runtimeReady = true
+    }
+    .preferredColorScheme(appearance == "light" ? .light : appearance == "dark" ? .dark : nil)
+  }
+}
+
 private struct iOSRootView: View {
+  let showingLaunchExperience: Bool
+  let launchContentVisibility: Double
   @EnvironmentObject private var store: AppStore
   @EnvironmentObject private var updateChecker: AppUpdateChecker
   @EnvironmentObject private var rssStore: RSSStore
   @Environment(\.openURL) private var openURL
   @Environment(\.scenePhase) private var scenePhase
   @State private var selection = AppTab.today
-  @State private var showingLaunchExperience = true
-  @State private var launchContentVisibility = 0.0
-  @State private var runtimeReadyForLaunch = false
   @State private var availableUpdate: TempoRelease?
   @State private var runtimeNavigationDepth = 0
   @State private var runtimeTabVisibility: CGFloat = 1
-  @AppStorage(TempoPreferenceKey.appearance) private var appearance = "system"
   @AppStorage(TempoPreferenceKey.moduleOrder) private var moduleOrder = TempoModuleOrder.defaultValue
 
   var body: some View {
@@ -80,20 +121,13 @@ private struct iOSRootView: View {
         .opacity(runtimeTabVisibility * launchContentVisibility)
         .allowsHitTesting(runtimeTabVisibility > 0.98 && !showingLaunchExperience)
         .accessibilityHidden(showingLaunchExperience || runtimeTabVisibility < 0.98)
-
-        if showingLaunchExperience {
-          TempoLaunchExperience(
-            contentVisibility: $launchContentVisibility,
-            isContentReady: runtimeReadyForLaunch
-          ) {
-            showingLaunchExperience = false
-            Task { await TempoPermissionGate.shared.markAppReady() }
-            checkForUpdates()
-          }
-          .zIndex(10)
-        }
       }
       .ignoresSafeArea(edges: .bottom)
+    }
+    .onChange(of: showingLaunchExperience) { _, showing in
+      guard !showing else { return }
+      Task { await TempoPermissionGate.shared.markAppReady() }
+      checkForUpdates()
     }
     .onChange(of: selection) { _ in
       runtimeNavigationDepth = 0
@@ -139,9 +173,6 @@ private struct iOSRootView: View {
     .onReceive(NotificationCenter.default.publisher(for: .tempoOpenDeveloperTools)) { _ in
       openDeveloperTools()
     }
-    .onReceive(NotificationCenter.default.publisher(for: .tempoRuntimeReady)) { _ in
-      runtimeReadyForLaunch = true
-    }
     .onReceive(NotificationCenter.default.publisher(for: .tempoOpenTool)) { notification in
       switch notification.userInfo?["tool"] as? String {
       case "pomodoro": selection = .pomodoro
@@ -164,15 +195,6 @@ private struct iOSRootView: View {
       )
       consumePendingWidgetDestination()
       RSSBackgroundRefresh.schedule()
-    }
-    .preferredColorScheme(preferredColorScheme)
-  }
-
-  private var preferredColorScheme: ColorScheme? {
-    switch appearance {
-    case "light": .light
-    case "dark": .dark
-    default: nil
     }
   }
 
