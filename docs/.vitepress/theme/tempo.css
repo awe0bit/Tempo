@@ -2,18 +2,20 @@
   --tempo-blue: #339cff;
   --tempo-ink: #1a1c1f;
   --tempo-surface: #ffffff;
-  --tempo-canvas: #f5f6f8;
-  --tempo-muted: #747b86;
+  --tempo-elevated: #ffffff;
+  --tempo-canvas: #f3f4f5;
+  --tempo-muted: #74777c;
   --tempo-line: rgba(26, 28, 31, 0.1);
-  --tempo-control: #f0f3f7;
-  --tempo-radius: 16px;
+  --tempo-control: #eaebed;
+  --tempo-scroll-thumb: rgba(26, 28, 31, 0.28);
+  --tempo-radius: 18px;
   --vp-c-brand-1: var(--tempo-blue);
   --vp-c-brand-2: #168cfb;
   --vp-c-brand-3: #087de8;
   --vp-c-brand-soft: rgba(51, 156, 255, 0.12);
   --vp-c-bg: var(--tempo-surface);
   --vp-c-bg-alt: var(--tempo-canvas);
-  --vp-c-bg-elv: var(--tempo-surface);
+  --vp-c-bg-elv: var(--tempo-elevated);
   --vp-c-bg-soft: var(--tempo-control);
   --vp-c-text-1: var(--tempo-ink);
   --vp-c-text-2: var(--tempo-muted);
@@ -21,17 +23,20 @@
   --vp-c-gutter: var(--tempo-line);
   --vp-font-family-base: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
   --vp-font-family-mono: "SFMono-Regular", ui-monospace, "Cascadia Code", Consolas, monospace;
-  --vp-layout-max-width: 1760px;
+  /* VitePress switches to its wide-layout calculation at 1440px. */
+  --vp-layout-max-width: 1440px;
   --vp-sidebar-width: 260px;
 }
 
 .dark {
-  --tempo-ink: #f7f8fa;
-  --tempo-surface: #1a1c1f;
-  --tempo-canvas: #111316;
-  --tempo-muted: #a5abb4;
+  --tempo-ink: #f5f5f5;
+  --tempo-surface: #0b0b0b;
+  --tempo-elevated: #171717;
+  --tempo-canvas: #111111;
+  --tempo-muted: #a3a3a3;
   --tempo-line: rgba(255, 255, 255, 0.1);
-  --tempo-control: #25282d;
+  --tempo-control: #222222;
+  --tempo-scroll-thumb: rgba(255, 255, 255, 0.3);
 }
 
 html {
@@ -45,6 +50,35 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Retain visible, usable native scrollbars; respect forced-color preferences. */
+@media (forced-colors: none) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--tempo-scroll-thumb) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background: var(--tempo-scroll-thumb);
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-button {
+    width: 0;
+    height: 0;
+  }
+}
+
 .VPNav {
   border-bottom: 1px solid var(--tempo-line);
 }
@@ -55,47 +89,43 @@ body {
   -webkit-backdrop-filter: saturate(180%) blur(22px);
 }
 
-.VPNavBar .container {
-  max-width: 1760px;
-}
-
 .VPNavBarTitle .title {
   border-bottom: 0 !important;
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 17px;
+  font-weight: 600;
   letter-spacing: -0.025em;
 }
 
 .VPImage.logo {
+  flex: none;
   width: 30px;
   height: 30px;
+  border-radius: 8px;
 }
 
 .VPNavBarSearch {
-  flex: 1 1 420px;
-  justify-content: center;
-  padding-left: 32px;
+  flex: 0 0 auto;
+  min-width: 0;
+  justify-content: flex-end;
+  padding-left: 0;
 }
 
-.VPNavBarSearch .DocSearch-Button,
-.VPNavBarSearch .VPLocalSearchBox button {
-  width: min(520px, 36vw);
-  height: 42px;
+.VPNavBarSearch .DocSearch-Button {
+  width: 44px;
+  height: 44px;
   border: 1px solid transparent;
   border-radius: 12px;
-  background: var(--tempo-control);
+  background: transparent;
   box-shadow: none;
   transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
 }
 
-.VPNavBarSearch .DocSearch-Button:hover,
-.VPNavBarSearch .VPLocalSearchBox button:hover {
+.VPNavBarSearch .DocSearch-Button:hover {
   border-color: rgba(51, 156, 255, 0.28);
-  background: color-mix(in srgb, var(--tempo-control) 82%, var(--tempo-blue));
+  background: var(--tempo-control);
 }
 
-.VPNavBarSearch .DocSearch-Button:active,
-.VPNavBarSearch .VPLocalSearchBox button:active {
+.VPNavBarSearch .DocSearch-Button:active {
   transform: scale(0.985);
 }
 
@@ -105,10 +135,10 @@ body {
   font-weight: 560;
 }
 
+/* Leave sidebar offsets and wide-layout widths to the theme's matching rules. */
 .VPSidebar {
   background: var(--tempo-surface) !important;
   border-right: 0;
-  padding-top: 40px !important;
 }
 
 .VPSidebarItem.level-0 > .item > .text {
@@ -119,7 +149,7 @@ body {
 
 .VPSidebarItem.level-1 .link {
   min-height: 34px;
-  border-radius: 9px;
+  border-radius: 10px;
   padding: 5px 10px;
   transition: color 150ms ease, background-color 150ms ease;
 }
@@ -148,18 +178,18 @@ body {
 
 .vp-doc h1 {
   margin: 16px 0 20px;
-  font-size: clamp(36px, 4vw, 52px);
-  line-height: 1.08;
-  letter-spacing: -0.045em;
+  font-size: clamp(34px, 4vw, 44px);
+  line-height: 1.15;
+  letter-spacing: -0.035em;
 }
 
 .vp-doc h2 {
-  margin-top: 56px;
+  margin-top: 44px;
   border-top: 1px solid var(--tempo-line);
-  padding-top: 38px;
-  font-size: 28px;
-  line-height: 1.2;
-  letter-spacing: -0.035em;
+  padding-top: 28px;
+  font-size: 26px;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
 }
 
 .vp-doc h3 {
@@ -171,12 +201,12 @@ body {
 .vp-doc p,
 .vp-doc li {
   font-size: 16px;
-  line-height: 1.82;
+  line-height: 1.8;
 }
 
 .vp-doc > p:first-of-type {
   color: var(--tempo-muted);
-  font-size: 19px;
+  font-size: 18px;
   line-height: 1.65;
 }
 
@@ -186,14 +216,28 @@ body {
   text-underline-offset: 3px;
 }
 
-.vp-doc table {
-  display: table;
-  width: 100%;
-  overflow: hidden;
+/* A native scroll container preserves the table rather than clipping cells. */
+.tempo-table-scroll {
+  max-width: 100%;
+  margin: 20px 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
   border: 1px solid var(--tempo-line);
   border-radius: var(--tempo-radius);
+}
+
+.tempo-table-scroll:focus-visible {
+  outline: 2px solid var(--tempo-blue);
+  outline-offset: 3px;
+}
+
+.vp-doc .tempo-table-scroll table {
+  display: table;
+  width: 100%;
+  margin: 0;
   border-collapse: separate;
   border-spacing: 0;
+  overflow: visible;
 }
 
 .vp-doc tr:nth-child(2n) {
@@ -251,50 +295,80 @@ body {
   background: var(--tempo-blue);
 }
 
-@media (min-width: 960px) {
-  .VPNavBar.has-sidebar .content {
-    padding-left: 24px;
+@media (min-width: 768px) {
+  .VPNavBarSearch {
+    flex: 1 1 auto;
+    padding-left: 16px;
   }
 
-  .VPDoc:not(.has-sidebar) .content {
-    max-width: 1160px;
+  .VPNavBarSearch #local-search {
+    width: 100%;
+    max-width: 420px;
+    min-width: 0;
+  }
+
+  .VPNavBarSearch .DocSearch-Button {
+    justify-content: space-between;
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    background: var(--tempo-control);
+  }
+
+  .VPNavBarSearch .DocSearch-Button-Container {
+    min-width: 0;
+  }
+
+  .VPNavBarSearch .DocSearch-Button-Placeholder {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .VPNavBarSearch .DocSearch-Button-Keys {
+    flex-shrink: 0;
   }
 }
 
-@media (max-width: 1100px) {
-  .VPNavBarSearch {
-    flex-basis: auto;
-    padding-left: 12px;
+@media (min-width: 768px) and (max-width: 1099px) {
+  .VPNavBarSearch #local-search,
+  .VPNavBarSearch .DocSearch-Button {
+    width: 44px;
   }
 
-  .VPNavBarSearch .DocSearch-Button,
-  .VPNavBarSearch .VPLocalSearchBox button {
-    width: 240px;
+  .VPNavBarSearch .DocSearch-Button {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .VPNavBarSearch .DocSearch-Search-Icon {
+    margin-right: 0;
+  }
+
+  .VPNavBarSearch .DocSearch-Button-Placeholder,
+  .VPNavBarSearch .DocSearch-Button-Keys {
+    display: none;
   }
 }
 
 @media (max-width: 767px) {
-  .VPNavBarSearch {
-    padding-left: 0;
-  }
-
   .vp-doc h1 {
     margin-top: 4px;
-    font-size: 34px;
+    font-size: 32px;
   }
 
   .vp-doc h2 {
-    margin-top: 42px;
-    padding-top: 28px;
-    font-size: 25px;
+    margin-top: 36px;
+    padding-top: 24px;
+    font-size: 24px;
   }
 
   .vp-doc > p:first-of-type {
     font-size: 17px;
   }
 
-  .vp-doc table {
-    display: block;
-    border-radius: 12px;
+  .vp-doc th,
+  .vp-doc td {
+    padding: 12px 14px;
   }
 }

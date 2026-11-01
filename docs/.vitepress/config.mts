@@ -4,7 +4,7 @@ const repository = 'https://github.com/awe0bit/Tempo'
 const downloads = `${repository}/releases/latest`
 
 const sharedTheme = {
-  logo: '/mark.svg',
+  logo: { light: '/tempo-icon-light.png', dark: '/tempo-icon-dark.png', alt: 'Tempo' },
   socialLinks: [{ icon: 'github' as const, link: repository }]
 }
 
@@ -14,8 +14,17 @@ export default defineConfig({
   head: [
     ['meta', { name: 'theme-color', content: '#ffffff' }],
     ['meta', { name: 'color-scheme', content: 'light dark' }],
-    ['link', { rel: 'icon', href: '/mark.svg', type: 'image/svg+xml' }]
+    ['link', { rel: 'icon', href: '/tempo-icon-dark.png', type: 'image/png' }]
   ],
+  markdown: {
+    config(md) {
+      md.renderer.rules.table_open = (_tokens, _index, _options, env) => {
+        const label = env.localeIndex === 'en' ? 'Scrollable table' : '可横向滚动的表格'
+        return `<div class="tempo-table-scroll" role="region" aria-label="${label}" tabindex="0"><table>\n`
+      }
+      md.renderer.rules.table_close = () => '</table></div>\n'
+    }
+  },
   themeConfig: {
     search: {
       provider: 'local',
@@ -51,6 +60,13 @@ export default defineConfig({
       themeConfig: {
         ...sharedTheme,
         siteTitle: 'Tempo 文档',
+        sidebarMenuLabel: '目录',
+        returnToTopLabel: '返回顶部',
+        langMenuLabel: '切换语言',
+        skipToContentLabel: '跳转到正文',
+        darkModeSwitchLabel: '外观',
+        lightModeSwitchTitle: '切换浅色模式',
+        darkModeSwitchTitle: '切换深色模式',
         nav: [
           { text: '使用指南', link: '/CONFIGURATION' },
           { text: '自托管同步', link: '/DEPLOYMENT' },
