@@ -141,31 +141,95 @@ body {
   border-right: 0;
 }
 
-.VPSidebarItem.level-0 > .item > .text {
+/* Site navigation: one alignment grid, grouped by space rather than rules. */
+.VPSidebar .group {
+  padding-top: 0;
+}
+
+.VPSidebar .group + .group {
+  margin-top: 28px;
+  border-top: 0;
+  padding-top: 0;
+}
+
+.VPSidebar .VPSidebarItem.level-0 {
+  padding-bottom: 0;
+}
+
+.VPSidebarItem.level-0 > .item {
+  align-items: center;
+  min-height: 24px;
+  margin-bottom: 8px;
+  padding: 0 12px;
+}
+
+.VPSidebar .VPSidebarItem.level-0 > .item > .text {
+  padding: 0;
+  color: var(--tempo-muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.VPSidebarItem.level-0 > .item > .caret {
+  width: 24px;
+  height: 24px;
+  margin-right: 0;
+  color: var(--tempo-muted);
+}
+
+.VPSidebarItem.level-0 > .item .caret-icon {
+  font-size: 14px;
+}
+
+.VPSidebar .VPSidebarItem.level-0 > .items {
+  border-left: 0;
+  padding-left: 0;
+}
+
+.VPSidebarItem.level-1 > .item > .link {
+  position: relative;
+  min-height: 36px;
+  border-radius: 10px;
+  padding: 7px 12px;
+  transition: color 140ms ease, background-color 140ms ease;
+}
+
+.VPSidebar .VPSidebarItem.level-1 > .item > .link > .text {
+  padding: 0;
   color: var(--tempo-ink);
   font-size: 14px;
-  font-weight: 680;
+  font-weight: 400;
+  line-height: 22px;
 }
 
-.VPSidebarItem.level-1 .link {
-  min-height: 34px;
-  border-radius: 10px;
-  padding: 5px 10px;
-  transition: color 150ms ease, background-color 150ms ease;
+.VPSidebarItem.level-1 > .item > .link:hover,
+.VPSidebarItem.level-1.is-active > .item > .link {
+  background: color-mix(in srgb, var(--tempo-control) 45%, transparent);
 }
 
-.VPSidebarItem.level-1.is-active .link {
-  background: rgba(51, 156, 255, 0.11);
+.VPSidebar .VPSidebarItem.level-1.is-active > .item > .link > .text {
+  color: var(--tempo-blue);
+  font-weight: 500;
 }
 
-.VPSidebarItem.level-1.is-active .text,
-.VPSidebarItem.level-1 .link:hover .text {
-  color: var(--tempo-blue) !important;
+.VPSidebarItem.level-1.is-active > .item > .link::before,
+.VPDocAsideOutline .outline-link.active::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 2px;
+  height: 16px;
+  border-radius: 2px;
+  background: var(--tempo-blue);
+  content: '';
+  transform: translateY(-50%);
 }
 
-.VPSidebarItem.level-0 .items {
-  border-left: 1px solid var(--tempo-line);
-  padding-left: 8px;
+.VPSidebar .link:focus-visible,
+.VPDocAsideOutline .outline-link:focus-visible {
+  outline: 2px solid var(--tempo-blue);
+  outline-offset: 2px;
 }
 
 .VPDoc .container {
@@ -274,25 +338,73 @@ body {
   box-shadow: none;
 }
 
+/* Page outline uses the same row rhythm, with no cramped rail or ellipsis. */
+.VPDocAsideOutline .content {
+  border-left: 0;
+  padding-left: 0;
+}
+
 .VPDocAsideOutline .outline-title {
-  color: var(--tempo-ink);
-  font-size: 13px;
-  font-weight: 680;
+  margin-bottom: 8px;
+  padding: 0 12px;
+  color: var(--tempo-muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 24px;
 }
 
 .VPDocAsideOutline .outline-link {
+  position: relative;
+  min-height: 36px;
+  border-radius: 10px;
+  padding: 7px 12px;
+  overflow: visible;
   color: var(--tempo-muted);
-  font-size: 13px;
-  line-height: 1.45;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  transition: color 140ms ease, background-color 140ms ease;
 }
 
-.VPDocAsideOutline .outline-link.active,
 .VPDocAsideOutline .outline-link:hover {
+  background: color-mix(in srgb, var(--tempo-control) 45%, transparent);
+  color: var(--tempo-ink);
+}
+
+.VPDocAsideOutline .outline-link.active {
   color: var(--tempo-blue);
+  font-weight: 500;
 }
 
 .VPDocAsideOutline .outline-marker {
-  background: var(--tempo-blue);
+  display: none;
+}
+
+@media (min-width: 960px) {
+  .VPSidebar .nav {
+    padding-top: 48px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .VPDoc .aside {
+    max-width: 264px;
+    padding-left: 40px;
+  }
+
+  .VPDoc.has-aside .content {
+    min-width: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .VPSidebar .link,
+  .VPDocAsideOutline .outline-link {
+    transition: none;
+  }
 }
 
 @media (min-width: 768px) {
