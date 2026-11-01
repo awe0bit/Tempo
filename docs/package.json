@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "vitepress dev --host 0.0.0.0",
-    "build": "vitepress build",
+    "build": "npm run test:locales && vitepress build",
+    "test:locales": "node --test .vitepress/tests/locales.test.mjs",
     "preview": "vitepress preview --host 0.0.0.0"
   },
   "devDependencies": {

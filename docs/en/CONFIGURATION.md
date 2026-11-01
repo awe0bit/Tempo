@@ -20,7 +20,7 @@ Open **Tools → Pomodoro**, choose Pomodoro or count-up mode, and start the tim
 
 Adjust session length, daily goals, and long-break intervals in **Settings → Pomodoro**. Open focus statistics from the timer page to review your records.
 
-iOS supports Lock Screen Live Activities and Dynamic Island. Availability also depends on your device, permissions, and app signing; see the [iOS installation guide, in Chinese](../IOS_PRIVATE_SIGNING.md).
+iOS supports Lock Screen Live Activities and Dynamic Island. Availability also depends on your device, permissions, and app signing; see the [iOS installation guide](IOS_PRIVATE_SIGNING.md).
 
 ### RSS
 

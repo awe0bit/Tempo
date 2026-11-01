@@ -25,6 +25,14 @@ export default defineConfig({
       md.renderer.rules.table_close = () => '</table></div>\n'
     }
   },
+  transformPageData(pageData, { siteConfig }) {
+    const path = pageData.relativePath
+    const counterpart = path.startsWith('en/') ? path.slice(3) : `en/${path}`
+    // Every published page must support same-page language switching.
+    if (path !== '404.md' && !siteConfig.pages.includes(counterpart)) {
+      throw new Error(`Missing documentation translation: ${counterpart} (for ${path})`)
+    }
+  },
   themeConfig: {
     search: {
       provider: 'local',
@@ -67,6 +75,12 @@ export default defineConfig({
         darkModeSwitchLabel: '外观',
         lightModeSwitchTitle: '切换浅色模式',
         darkModeSwitchTitle: '切换深色模式',
+        notFound: {
+          title: '页面未找到',
+          quote: '这个页面可能已移动，或暂时没有对应语言的内容。',
+          linkLabel: '返回中文文档首页',
+          linkText: '返回首页'
+        },
         nav: [
           { text: '使用指南', link: '/CONFIGURATION' },
           { text: '自托管同步', link: '/DEPLOYMENT' },
@@ -127,7 +141,11 @@ export default defineConfig({
         nav: [
           { text: 'User guide', link: '/en/CONFIGURATION' },
           { text: 'Self-hosted sync', link: '/en/DEPLOYMENT' },
-          { text: 'Develop', link: '/en/DEVELOPMENT' },
+          { text: 'Develop', items: [
+            { text: 'Development guide', link: '/en/DEVELOPMENT' },
+            { text: 'Architecture', link: '/en/ARCHITECTURE' },
+            { text: 'Design guidelines', link: '/en/DESIGN' }
+          ] },
           { text: 'Download', link: downloads }
         ],
         sidebar: [
@@ -137,6 +155,12 @@ export default defineConfig({
               { text: 'Overview', link: '/en/' },
               { text: 'Usage and settings', link: '/en/CONFIGURATION' },
               { text: 'QR pairing', link: '/en/PAIRING' },
+              { text: 'iOS installation and signing', link: '/en/IOS_PRIVATE_SIGNING' }
+            ]
+          },
+          {
+            text: 'Self-hosting',
+            items: [
               { text: 'Self-hosted sync', link: '/en/DEPLOYMENT' }
             ]
           },
@@ -145,8 +169,12 @@ export default defineConfig({
             collapsed: true,
             items: [
               { text: 'Development guide', link: '/en/DEVELOPMENT' },
-              { text: 'iOS signing (中文)', link: '/IOS_PRIVATE_SIGNING' },
-              { text: 'Architecture (中文)', link: '/ARCHITECTURE' }
+              { text: 'Product scope', link: '/en/PRODUCT' },
+              { text: 'Architecture', link: '/en/ARCHITECTURE' },
+              { text: 'iOS architecture and OTA', link: '/en/architecture/ios-ota' },
+              { text: 'Security and performance', link: '/en/SECURITY_PERFORMANCE' },
+              { text: 'Sync protocol', link: '/en/SYNC_PROTOCOL' },
+              { text: 'Design guidelines', link: '/en/DESIGN' }
             ]
           }
         ],

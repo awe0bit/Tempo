@@ -28,7 +28,7 @@ npm run typecheck
 npm run export:ios
 ```
 
-Swift owns persisted data and credentials. Pages consume snapshots and submit actions through the bridge; they do not maintain a second task database. See [iOS architecture and OTA, in Chinese](../architecture/ios-ota.md).
+Swift owns persisted data and credentials. Pages consume snapshots and submit actions through the bridge; they do not maintain a second task database. See [iOS architecture and OTA](architecture/ios-ota.md).
 
 ## Apple clients
 
@@ -45,7 +45,7 @@ xcodegen generate
 open TempoApple.xcodeproj
 ```
 
-Choose `TempoiOS` or `TempomacOS`. Edit `apps/apple/project.yml` rather than only editing the generated Xcode project. See [iOS signing, in Chinese](../IOS_PRIVATE_SIGNING.md) for device builds.
+Choose `TempoiOS` or `TempomacOS`. Edit `apps/apple/project.yml` rather than only editing the generated Xcode project. See [iOS signing](IOS_PRIVATE_SIGNING.md) for device builds.
 
 ## Android and Windows
 
@@ -70,7 +70,7 @@ go vet ./...
 go build ./cmd/sync-server
 ```
 
-Local environment and API details are in the [service README](https://github.com/awe0bit/Tempo/blob/main/services/sync/README.md). The [sync protocol](../SYNC_PROTOCOL.md) is documented in Chinese.
+Local environment and API details are in the [service README](https://github.com/awe0bit/Tempo/blob/main/services/sync/README.md). See the [sync protocol](SYNC_PROTOCOL.md) for the HTTP API and merge rules.
 
 ## Documentation
 
@@ -80,7 +80,7 @@ npm ci
 npm run dev
 ```
 
-Run `npm run build` before submitting. Keep the Chinese and English user guides aligned; label untranslated technical references clearly.
+Run `npm run build` before submitting. Keep every Chinese page and its English counterpart aligned, including navigation and internal links. The build rejects missing translations so language switching cannot point to an unpublished page.
 
 ## Releases
 

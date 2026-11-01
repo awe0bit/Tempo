@@ -19,7 +19,7 @@ Basic tasks and timers do not require an account or server. Fetching articles, A
 | Change appearance or language | [Appearance and language](CONFIGURATION.md#appearance-and-language) |
 | Connect multiple devices | [QR pairing](PAIRING.md) |
 | Run your own sync server | [Self-hosted sync](DEPLOYMENT.md) |
-| Install an iPhone / iPad IPA | [iOS signing, in Chinese](../IOS_PRIVATE_SIGNING.md) |
+| Install an iPhone / iPad IPA | [iOS installation and signing](IOS_PRIVATE_SIGNING.md) |
 | Understand data and updates | [Data and updates](CONFIGURATION.md#data-and-updates) |
 
 ## Downloads and feedback
