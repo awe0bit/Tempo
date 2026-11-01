@@ -114,7 +114,7 @@ body {
   width: 44px;
   height: 44px;
   border: 1px solid transparent;
-  border-radius: 12px;
+  border-radius: 10px;
   background: transparent;
   box-shadow: none;
   transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
@@ -429,15 +429,26 @@ body {
 }
 
 @media (min-width: 768px) {
+  /* One right-aligned toolbar instead of an isolated search in the middle. */
+  .VPNavBar .content-body {
+    column-gap: 8px;
+  }
+
+  .VPNavBar:not(.home.top) .content-body {
+    background: transparent;
+  }
+
   .VPNavBarSearch {
-    flex: 1 1 auto;
-    justify-content: center;
-    padding-left: 16px;
+    flex: 0 1 280px;
+    justify-content: flex-end;
+    margin-left: auto;
+    margin-right: 8px;
+    padding-left: 0;
   }
 
   .VPNavBarSearch #local-search {
     width: 100%;
-    max-width: 320px;
+    max-width: 280px;
     min-width: 0;
   }
 
@@ -446,7 +457,7 @@ body {
     width: 100%;
     height: 40px;
     padding: 0 12px;
-    background: var(--tempo-control);
+    background: color-mix(in srgb, var(--tempo-control) 65%, transparent);
   }
 
   .VPNavBarSearch .DocSearch-Button-Container {
@@ -462,26 +473,42 @@ body {
   .VPNavBarSearch .DocSearch-Button-Keys {
     flex-shrink: 0;
   }
-}
 
-@media (min-width: 768px) and (max-width: 1099px) {
-  .VPNavBarSearch #local-search,
-  .VPNavBarSearch .DocSearch-Button {
-    width: 44px;
+  .VPNavBar .content-body > .menu .VPNavBarMenuLink,
+  .VPNavBar .content-body > .translations > .button,
+  .VPNavBar .content-body > .extra > .button {
+    height: 40px;
+    border-radius: 10px;
+    padding: 0 10px;
+    line-height: 40px;
+    transition: background-color 140ms ease, color 140ms ease;
   }
 
-  .VPNavBarSearch .DocSearch-Button {
-    justify-content: center;
-    padding: 0;
+  .VPNavBar .content-body > .translations > .button .text {
+    line-height: 40px;
   }
 
-  .VPNavBarSearch .DocSearch-Search-Icon {
+  .VPNavBar .content-body > .appearance {
+    height: 40px;
+    padding: 0 8px;
+  }
+
+  .VPNavBar .content-body > .social-links,
+  .VPNavBar .content-body > .extra {
     margin-right: 0;
   }
 
-  .VPNavBarSearch .DocSearch-Button-Placeholder,
-  .VPNavBarSearch .DocSearch-Button-Keys {
-    display: none;
+  .VPNavBar .content-body > .social-links .VPSocialLink {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+  }
+
+  .VPNavBar .content-body > .menu .VPNavBarMenuLink:hover,
+  .VPNavBar .content-body > .translations > .button:hover,
+  .VPNavBar .content-body > .extra > .button:hover,
+  .VPNavBar .content-body > .social-links .VPSocialLink:hover {
+    background: color-mix(in srgb, var(--tempo-control) 45%, transparent);
   }
 }
 
