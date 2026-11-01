@@ -210,9 +210,12 @@ body {
   line-height: 22px;
 }
 
-.VPSidebarItem.level-1 > .item > .link:hover,
-.VPSidebarItem.level-1.is-active > .item > .link {
+.VPSidebarItem.level-1:not(.is-active) > .item > .link:hover {
   background: color-mix(in srgb, var(--tempo-control) 45%, transparent);
+}
+
+.VPSidebarItem.level-1.is-active > .item > .link {
+  background: transparent;
 }
 
 .VPSidebar .VPSidebarItem.level-1.is-active > .item > .link > .text {
@@ -231,6 +234,13 @@ body {
   background: var(--tempo-blue);
   content: '';
   transform: translateY(-50%);
+}
+
+.VPSidebarItem.level-1.is-active > .item > .link::before {
+  left: 2px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
 }
 
 .VPSidebar .link:focus-visible,
