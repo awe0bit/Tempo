@@ -31,7 +31,7 @@ jobs:
           go-version: '1.27.0'
           cache-dependency-path: services/sync/go.mod
       - run: go mod download
-      - run: go test ./...
+      - run: go test -race ./...
       - run: go vet ./...
 
   deploy:
@@ -64,8 +64,8 @@ jobs:
           rm -rf package
           mkdir -p package/sync
           cp deploy/tempo-services/docker-compose.yml package/docker-compose.yml
-          cp services/sync/{Dockerfile,.dockerignore,go.mod} package/sync/
-          cp -R services/sync/{cmd,internal} package/sync/
+          cp services/sync/{Dockerfile,.dockerignore,go.mod,go.sum} package/sync/
+          cp -R services/sync/{cmd,internal,licenses} package/sync/
           ssh "${ssh_opts[@]}" "$target" "rm -rf '$staging' && mkdir -p '$staging'"
           tar -C package -czf - . | ssh "${ssh_opts[@]}" "$target" "tar -xzf - -C '$staging'"
 

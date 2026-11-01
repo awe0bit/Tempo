@@ -66,7 +66,7 @@ final class TempoNativeRegistry {
       "locale": Locale.current.identifier,
       "colorScheme": scheme,
       "revision": revision,
-      "capabilities": ["feedback.selection", "navigation.tools", "navigation.toolChromeProgress"],
+      "capabilities": ["feedback.selection", "navigation.tools", "navigation.toolChromeProgress", "sync.qrPairing"],
       "preferences": [
         "appearance": appearance,
         "haptics": defaults.object(forKey: TempoPreferenceKey.haptics) as? Bool ?? true,
@@ -227,6 +227,14 @@ final class TempoNativeRegistry {
 
     case "sync.now":
       return ["ok": await store.syncNow()]
+    case "sync.scan":
+      try TempoPairingCoordinator.shared.present(store: store)
+      return ["ok": true]
+    case "sync.autoSync":
+      var settings = store.syncSettings
+      settings.autoSync = payload.bool("autoSync", fallback: true)
+      try store.saveSyncSettings(settings)
+      return ["ok": true]
     case "sync.save":
       var settings = store.syncSettings
       settings.serverURL = payload.string("serverURL")

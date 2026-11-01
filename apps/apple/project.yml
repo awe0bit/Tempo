@@ -63,6 +63,7 @@ targets:
           - CFBundleURLName: one.darker.qingxu
             CFBundleURLSchemes: [tempo, qingxu]
         NSSupportsLiveActivities: true
+        NSCameraUsageDescription: 扫描服务器二维码，安全配对同步服务。
         NSSupportsLiveActivitiesFrequentUpdates: true
         BGTaskSchedulerPermittedIdentifiers:
           - one.darker.qingxu.rss.refresh

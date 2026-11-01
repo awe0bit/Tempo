@@ -2,9 +2,11 @@
 
 FROM golang:1.27.0-alpine AS build
 WORKDIR /src
-COPY go.mod ./
+COPY go.mod go.sum ./
+RUN go mod download
 COPY cmd ./cmd
 COPY internal ./internal
+COPY licenses ./licenses
 RUN go test ./... && go vet ./...
 RUN CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build ./...
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/tempo-sync ./cmd/sync-server \
@@ -18,6 +20,7 @@ LABEL org.opencontainers.image.title="TEMPO Sync" \
       io.tempo.component="sync"
 COPY --from=build --chown=65532:65532 /out/data /data
 COPY --from=build --chown=65532:65532 /out/tempo-sync /tempo-sync
+COPY --from=build /src/licenses/go-qrcode-LICENSE.txt /licenses/go-qrcode.txt
 ENV SYNC_ADDR=:8080 \
     SYNC_DATA_FILE=/data/store.json
 EXPOSE 8080

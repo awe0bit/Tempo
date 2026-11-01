@@ -20,6 +20,12 @@ import (
 const defaultMaxBodyBytes int64 = 2 << 20
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "pair" {
+		if err := runPair(os.Args[2:], os.Stdout); err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
 	if len(os.Args) == 2 && os.Args[1] == "healthcheck" {
 		if err := healthcheck(); err != nil {
 			log.Print(err)

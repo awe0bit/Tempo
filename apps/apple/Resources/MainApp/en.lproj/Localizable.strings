@@ -136,3 +136,21 @@
 "年" = "Year";
 "工具" = "Tools";
 "返回工具" = "Back to Tools";
+
+"这不是有效的 Tempo 配对二维码" = "This is not a valid Tempo pairing QR code";
+"二维码已使用或过期，请在服务器生成新码" = "This code has been used or expired. Generate a new code on your server.";
+"服务器尚未支持扫码配对，请先更新同步服务" = "This server does not support QR pairing yet. Update the sync service first.";
+"无法连接配对服务器，请检查网络并重新生成二维码" = "Cannot connect to the pairing server. Check your connection and generate a new code.";
+"当前设备无法使用扫码，请检查相机权限" = "Scanning is unavailable on this device. Check camera permissions.";
+"配对成功" = "Paired successfully";
+"已保存连接，任务将在后台自动同步" = "Connection saved. Your tasks will sync in the background.";
+"连接这台服务器？" = "Connect to this server?";
+"请确认这是你自己的服务器。配对后，本机数据会按同步规则与服务器合并。" = "Confirm this is your server. Pairing will merge local data with it using the sync rules.";
+"重新扫码" = "Scan again";
+"正在配对并验证连接…" = "Pairing and verifying connection…";
+"确认配对" = "Confirm pairing";
+"对准服务器终端中的 Tempo 配对二维码" = "Point the camera at the Tempo pairing QR code in your server terminal.";
+"请允许相机访问以扫描配对二维码" = "Allow camera access to scan the pairing QR code.";
+"打开系统设置" = "Open Settings";
+"重新检查权限" = "Check permission again";
+"扫码配对" = "Scan to pair";

@@ -41,6 +41,7 @@ type Server struct {
 	allowAny     bool
 	maxBodyBytes int64
 	ai           *aiService
+	pairing      *pairingState
 }
 
 func New(config Config, taskStore *store.Store) (*Server, error) {
@@ -61,6 +62,7 @@ func New(config Config, taskStore *store.Store) (*Server, error) {
 		origins:      make(map[string]struct{}),
 		maxBodyBytes: config.MaxBodyBytes,
 		ai:           newAIService(config.AIBaseURL, config.AIAPIKey, config.AIModel),
+		pairing:      newPairingState(token),
 	}
 	for _, configured := range config.AllowedOrigins {
 		origin := strings.TrimSpace(configured)
@@ -83,6 +85,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/v1/sync", s.sync)
 	mux.HandleFunc("/v1/changes", s.changes)
 	mux.HandleFunc("/v1/ai", s.aiRequest)
+	mux.HandleFunc("/v1/pairing/create", s.createPairing)
+	mux.HandleFunc("/v1/pairing/redeem", s.redeemPairing)
 	return s.withCORS(mux)
 }
 
@@ -113,11 +117,11 @@ func (s *Server) health(response http.ResponseWriter, request *http.Request) {
 }
 
 type syncRequest struct {
-	DeviceID string            `json:"deviceId"`
-	Tasks    []json.RawMessage `json:"tasks"`
-	Pomodoro json.RawMessage   `json:"pomodoro,omitempty"`
-	RSS      json.RawMessage   `json:"rss,omitempty"`
-	Workspace json.RawMessage  `json:"workspace,omitempty"`
+	DeviceID  string            `json:"deviceId"`
+	Tasks     []json.RawMessage `json:"tasks"`
+	Pomodoro  json.RawMessage   `json:"pomodoro,omitempty"`
+	RSS       json.RawMessage   `json:"rss,omitempty"`
+	Workspace json.RawMessage   `json:"workspace,omitempty"`
 }
 
 type syncResponse struct {
