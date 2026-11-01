@@ -1,40 +1,33 @@
-# Tempo documentation
+# Tempo user guide
 
-Tempo is a personal, local-first task and focus app for iPhone, Android, Mac, and Windows. Your data stays on each device by default; connect your own server when you want real-time sync.
+Tempo combines tasks, a calendar, focus timers, and RSS reading. Start on one device and connect your own server when you need sync.
 
-## What Tempo does
+## First steps
 
-- Capture tasks in the Inbox and organize what matters today.
-- Browse a weekly or monthly calendar without leaving the task view.
-- Run Pomodoro sessions or a count-up focus timer.
-- Read, search, save, translate, and summarize RSS articles.
-- Keep tasks, focus history, and RSS state in sync across your devices.
-- Show focus progress through iOS widgets, Lock Screen Live Activities, and Dynamic Island.
+1. Install the package for your device from [GitHub Releases](https://github.com/awe0bit/Tempo/releases).
+2. Capture tasks in your Inbox and schedule them when you are ready.
+3. View tasks in Today. On iOS, Pomodoro and RSS are available under Tools.
+4. Adjust appearance, calendar options, and focus settings in Settings.
 
-Tempo works offline. Sync and AI features are optional, and you can host the sync service on your own server.
+Basic tasks and timers do not require an account or server. Fetching articles, AI, and sync require a connection.
 
-## Get started
+## Find what you need
 
 | Goal | Guide |
 | --- | --- |
-| Run your own sync server | [Self-hosted sync](/en/DEPLOYMENT) |
-| Configure clients and integrations | [Configuration](/en/CONFIGURATION) |
-| Download the latest build | [GitHub Releases](https://github.com/awe0bit/Tempo/releases/latest) |
+| Use tasks, calendar, focus, and RSS | [Usage and settings](CONFIGURATION.md) |
+| Change appearance or language | [Appearance and language](CONFIGURATION.md#appearance-and-language) |
+| Connect multiple devices | [Multi-device sync](CONFIGURATION.md#multi-device-sync) |
+| Run your own sync server | [Self-hosted sync](DEPLOYMENT.md) |
+| Install an iPhone / iPad IPA | [iOS signing, in Chinese](../IOS_PRIVATE_SIGNING.md) |
+| Understand data and updates | [Data and updates](CONFIGURATION.md#data-and-updates) |
 
-Install the file whose name matches your platform. Releases are platform-specific, so the newest release may not contain builds for every platform. The in-app **Settings → About Tempo** page automatically finds the latest compatible build for the current device.
+## Downloads and feedback
 
-The public iOS IPA is unsigned. Sign it locally with your own Apple identity and keep the main app, widget extension, and App Group entitlements intact.
+Platforms may be updated separately. If the latest release does not include your platform, find its most recent package in the [release list](https://github.com/awe0bit/Tempo/releases).
 
-## Fast path
+For help, open a [GitHub issue](https://github.com/awe0bit/Tempo/issues) with your platform, app version, and steps to reproduce. Never include keys, signing files, or private content.
 
-1. Install Docker and Docker Compose on a Linux server.
-2. Copy `.env.example` to `.env`.
-3. Generate a 64-character hexadecimal `SYNC_TOKEN`.
-4. Start the service and place it behind HTTPS.
-5. Enter the same server URL and token on every device.
+## Contribute
 
-Tempo is designed for one person. Do not share the same endpoint and token with unrelated users.
-
-## Updates
-
-Compatible iOS page content can update automatically through OTA. Changes to native navigation, permissions, widgets, or Dynamic Island still require installing a newer IPA. Android, Windows, and macOS updates use the normal download and replacement flow for each platform.
+Source builds, repository structure, and release instructions are in the separate [development guide](DEVELOPMENT.md).

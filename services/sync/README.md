@@ -16,17 +16,16 @@
 
 ## 推荐运行方式
 
-生产环境请从仓库根目录使用已发布镜像：
+使用本目录的 Compose 文件从源码构建。完整 HTTPS 与备份步骤见部署指南：
 
 ```bash
-cd TEMPO
+cd Tempo/services/sync
 cp .env.example .env
 TOKEN=$(openssl rand -hex 32)
 sed -i "s/^SYNC_TOKEN=.*/SYNC_TOKEN=$TOKEN/" .env
 chmod 600 .env
 sudo install -d -m 700 -o 65532 -g 65532 data
-docker compose pull
-docker compose up -d
+docker compose up -d --build
 curl -fsS http://127.0.0.1:8080/health
 ```
 
@@ -71,7 +70,7 @@ go run ./cmd/sync-server
 | `AI_API_KEY` | 空 | 留空时 `/v1/ai` 返回未配置 |
 | `AI_MODEL` | `gpt-5.6-terra` | AI 模型名称 |
 
-仓库根 Compose 会把主机 `SYNC_LISTEN` 映射到容器 8080，并将 `SYNC_DATA_DIR` 挂载为容器 `/data`；不要混淆主机变量与进程内部的 `SYNC_ADDR`、`SYNC_DATA_FILE`。
+本目录的 Compose 会把主机 `SYNC_LISTEN` 映射到容器 8080，并将 `SYNC_DATA_DIR` 挂载为容器 `/data`；不要混淆主机变量与进程内部的 `SYNC_ADDR`、`SYNC_DATA_FILE`。
 
 ## HTTP 接口
 
@@ -94,7 +93,7 @@ go vet ./...
 go build ./cmd/sync-server
 ```
 
-提交到 `main` 后，GitHub Actions 会重复执行测试与 `vet`、构建容器，并发布 `ghcr.io/felixzoe/tempo-sync`；旧的 `qingxu-sync` 标签仅用于兼容既有部署。
+服务端代码提交到 `main` 后，GitHub Actions 执行测试与 `vet`，构建容器并发布当前仓库所有者命名空间下的 `tempo-sync` 镜像；旧的 `qingxu-sync` 标签仅用于兼容既有部署。文档改动不触发服务器发布。
 
 ## 存储边界
 

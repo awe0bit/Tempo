@@ -1,6 +1,6 @@
 # Tempo Apple 原生客户端
 
-`apps/apple` 包含 Tempo 的原生 Apple 容器。导航、系统权限、WidgetKit、ActivityKit 与 Keychain 由 SwiftUI 负责；可热更新的内容层由 Expo/React Native Brownfield 包嵌入。它不包含 Flutter 引擎。
+`apps/apple` 包含 Tempo 的 Apple 客户端。iOS 的原生壳、系统权限、WidgetKit、ActivityKit 与 Keychain 由 Swift 管理，可热更新页面通过 Expo/React Native Brownfield 嵌入；macOS 保持 SwiftUI。两者均不包含 Flutter 引擎。
 
 返回：[项目首页](../../README.md) · [设计规范](../../docs/DESIGN.md) · [系统架构](../../docs/ARCHITECTURE.md) · [iOS 签名](../../docs/IOS_PRIVATE_SIGNING.md)
 
@@ -100,7 +100,8 @@ App Group：group.one.darker.qingxu
 - 可以 OTA：已挂载到 `ReactNativeView` 的 TypeScript 页面、布局、样式、图片和兼容业务逻辑。
 - 必须重新构建 IPA：原生导航和搜索控件、Swift 代码、系统权限、原生依赖、Widget、锁屏组件与灵动岛扩展。
 - `原生容器已接入` 表示 IPA 已链接 TempoRuntime，并能真正加载 EAS Update；不是只向 Expo 地址发一次探测请求。
-- 当前开发者工具可打开“OTA 内容层”进行真机验证。其他 SwiftUI 页面会按模块逐步迁移，未迁移页面不会被虚假标记为可 OTA。
+- 当前四个 iOS 一级页面为收集箱、今天、工具和设置；工具内包含番茄钟和 RSS。页面由 TypeScript 承载，原生能力仍通过桥接调用。
+- 顶部原生按钮与内容层原生栈使用进度桥接协调淡入淡出；可选桥接能力通过 `capabilities` 协商。
 
 ## 数据位置
 

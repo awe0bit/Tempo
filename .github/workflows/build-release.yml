@@ -107,6 +107,8 @@ jobs:
             fi
 
             while IFS= read -r path; do
+              # Documentation does not change a platform binary or server image.
+              case "$path" in *.md) continue ;; esac
               case "$path" in
                 apps/apple/Shared/*)
                   case "$apple_scope" in

@@ -1,200 +1,75 @@
-<p align="center">
-  <img src="apps/flutter/assets/branding/tempo-icon-master-black.png" width="112" alt="Tempo 应用图标">
-</p>
+<p align="center"><img src="apps/flutter/assets/branding/tempo-icon-master-black.png" width="112" alt="Tempo 应用图标"></p>
 
 <h1 align="center">Tempo</h1>
 
+<p align="center">记录待办，安排今天，专注当下。</p>
+
 <p align="center"><strong>简体中文</strong> · <a href="README.en.md">English</a></p>
 
-<p align="center"><strong>Time. Everything. Moments. Productivity. Organized.</strong></p>
-
-<p align="center">时间、信息、当下与效率，一切井然有序。一个本地优先、支持自托管同步的个人工作台。</p>
-
 <p align="center">
-  <a href="https://todo.darker.one">开发与部署文档</a> ·
-  <a href="https://github.com/awe0bit/Tempo/releases/latest">下载最新版</a> ·
-  <a href="https://github.com/awe0bit/Tempo/actions/workflows/build-release.yml">构建状态</a> ·
-  <a href="docs/DEPLOYMENT.md">部署同步服务</a> ·
-  <a href="docs/DESIGN.md">设计规范</a>
+  <a href="https://github.com/awe0bit/Tempo/releases">下载应用</a> ·
+  <a href="https://todo.darker.one">使用指南</a> ·
+  <a href="https://github.com/awe0bit/Tempo/issues">反馈问题</a>
 </p>
 
-## 为什么是 Tempo
+Tempo 把待办、日历、专注计时和 RSS 阅读放在一起，支持 iOS、macOS、Android 和 Windows。
 
-**Tempo**，读作 `/ˈtem.poʊ/`。它来自音乐中的“速度与节奏”，也保留完整释义：
+**不需要注册账号，也不必先搭服务器。** 可以先在本机使用，需要多设备同步时，再连接自己的同步服务。
 
-**Time. Everything. Moments. Productivity. Organized.**
+## 可以做什么
 
-它表达的是：**时间、信息、当下与效率，一切井然有序。** 任务、日历、RSS、专注和多端同步被放进同一条清晰的个人工作流。数据先保存到设备，本地操作不依赖网络；需要跨设备时，可以把轻量同步服务部署到自己的服务器，不需要注册第三方账号。
+- **随手记录**：把想到的事情放进收集箱，再安排日期、补充备注或标记完成。
+- **安排今天**：结合日历查看当天任务，在周视图与月视图之间切换。
+- **专注计时**：使用番茄钟或正计时，调整专注时长和每日目标，查看专注记录。
+- **集中阅读**：订阅 RSS 来源，筛选、搜索和阅读文章；配置 AI 后可生成摘要、翻译正文。
+- **多端同步**：通过自己的服务器同步任务、专注状态和 RSS 阅读状态。
+- **按习惯使用**：切换浅色或深色外观；iOS 支持简体中文和英语，并可通过小组件、锁屏实时活动和灵动岛查看专注状态。
 
-## 主要功能
+各平台的布局和可用功能有所不同，以对应客户端为准。
 
-- **任务管理**：今天、可选收集箱、项目、备注、开始时间、截止时间、完成与恢复；已完成任务保留下沉并显示删除线。
-- **自然日历**：周视图与月视图连续展开，日期、节日和任务列表保持在同一页面。
-- **番茄钟与正计时**：自定义专注、休息、长休息和每日目标；自动切换阶段，并用年度热力图沉淀专注记录。
-- **实时多端同步**：任务、番茄钟和 RSS 阅读状态自动同步；前台在线设备通过低占用变更通知及时刷新，重启后从已保存修订继续。
-- **Apple 系统能力**：iOS 锁屏实时活动、灵动岛、主屏幕小组件和锁屏小组件；macOS 使用原生 SwiftUI。
-- **中英文界面**：iOS 自动跟随系统的简体中文或 English，也可在“系统设置 → Tempo → 语言”单独修改。
-- **原生 RSS 阅读**：来源分类、未读、收藏、搜索、OPML、离线缓存、阅读进度、正文阅读、翻译和 AI 摘要。
-- **AI 助手**：RSS 摘要、原文翻译和轻量任务规划；可使用自托管代理或直接配置 OpenAI、DeepSeek 等兼容接口。
-- **离线优先**：编辑先原子写入本机，服务器暂时不可用不会阻塞使用。
+## 下载与安装
 
-## 平台与下载
+前往 [GitHub Releases](https://github.com/awe0bit/Tempo/releases)，选择名称中带有自己平台的文件。
 
-所有公开安装包都位于 [GitHub Releases](https://github.com/awe0bit/TEMPO/releases)。版本号统一使用纯数字 `x.y.z`；每次只构建实际发生变化的平台，因此某个 Release 只包含本次更新的平台安装包。
+| 平台 | 下载文件 | 安装方式 |
+| --- | --- | --- |
+| iPhone / iPad（iOS 17+） | 以 `iOS-unsigned.ipa` 结尾 | 使用自己的签名方式安装，见 [iOS 安装说明](docs/IOS_PRIVATE_SIGNING.md) |
+| Mac（macOS 15+） | `macOS` 的 `.dmg` 或便携 `.zip` | 打开磁盘映像或解压后安装 |
+| Android | 以 `Android.apk` 结尾 | 在系统中确认安装 |
+| Windows | `Windows-Setup.exe` 或 `Windows-Portable.zip` | 运行安装程序，或解压完整便携包 |
 
-| 平台 | 实现 | Release 文件 | 说明 |
-| --- | --- | --- | --- |
-| iOS | SwiftUI | `TEMPO-<版本>-iOS-unsigned.ipa` | 需使用自己的 Apple 身份重新签名；包内包含 Widget/Live Activity 扩展 |
-| macOS | SwiftUI | `TEMPO-<版本>-macOS-Portable.zip`、`.dmg` | 当前未公证，首次启动可能出现 Gatekeeper 提示 |
-| Android | Flutter（独立工程） | `TEMPO-<版本>-Android.apk` | 交给 Android 系统确认安装或覆盖更新 |
-| Windows | Flutter | `TEMPO-<版本>-Windows-Portable.zip`、`Windows-Setup.exe` | 提供便携版和安装版；未签名时可能出现 SmartScreen 提示 |
+不同平台可能分批更新。如果最新发布页没有你的平台，请在发布列表中查找最近一次包含它的版本。
 
-下载后可使用同一 Release 中的 `SHA256SUMS.txt` 校验文件完整性。安装包、校验和与构建来源证明均由 GitHub Actions 自动生成。
+## 开始使用
 
-各平台独立更新，因此最新 Release 不一定同时包含四个平台。请下载名称中带有当前平台的文件；应用内“设置 → 关于 Tempo”也会自动找到适合当前平台的最新版。
+1. **先记下来**：在收集箱新增待办，不必立即整理。
+2. **安排日期**：把要做的事情安排到某一天，在“今天”中查看。
+3. **开始专注**：iOS 从“工具 → 番茄钟”进入计时；阅读订阅则进入“工具 → RSS”。
+4. **按需设置**：在设置中调整外观、日历和专注参数。
 
-### 关于 iOS 自签
+任务记录和计时可离线使用；获取新的 RSS 文章、AI 处理和跨设备同步需要联网。更多操作见 [使用指南](docs/CONFIGURATION.md)。
 
-iOS 的灵动岛与小组件位于 `TEMPOWidgets.appex`。签名工具必须同时保留并签名主应用和扩展，同时保持以下标识一致：
+## 在多个设备上使用
 
-```text
-主应用：one.darker.qingxu
-扩展：one.darker.qingxu.widgets
-App Group：group.one.darker.qingxu
-```
+同步是可选的。在自己的服务器上 [部署同步服务](docs/DEPLOYMENT.md)，然后在各设备的同步设置中填写相同的服务器地址和密钥即可。
 
-仅重签主应用、删除扩展或丢失 App Group 权限，都会导致应用可以打开但灵动岛和小组件不可用。App Store 上架不是使用这些能力的必要条件；正确的扩展打包、签名和权限才是关键。详见 [iOS 本机签名](docs/IOS_PRIVATE_SIGNING.md)。
-
-## 快速部署同步服务
-
-前置条件：Linux 服务器、Docker Compose v2、一个已经启用 HTTPS 的域名。
-
-```bash
-git clone https://github.com/awe0bit/Tempo.git
-cd Tempo/services/sync
-cp .env.example .env
-TOKEN=$(openssl rand -hex 32)
-sed -i "s/^SYNC_TOKEN=.*/SYNC_TOKEN=$TOKEN/" .env
-chmod 600 .env
-sudo install -d -m 700 -o 65532 -g 65532 data
-docker compose config --quiet
-docker compose up -d --build
-curl -fsS http://127.0.0.1:8080/health
-echo "$TOKEN"
-```
-
-将域名的 `/v1/` 和 `/health` 反向代理到 `http://127.0.0.1:8080`。随后在每台客户端的“设置 → 多端同步”中填写：
-
-```text
-服务器地址：https://你的域名
-同步密钥：上一步生成的 64 位十六进制 TOKEN
-设备名称：任意易识别名称
-自动同步：开启
-```
-
-服务器地址不要附加 `/v1/sync`。更新、备份、恢复、1Panel/Nginx 配置和排障命令见 [完整部署文档](docs/DEPLOYMENT.md)。
-
-## 数据边界
-
-- 服务端保存任务、删除墓碑、番茄钟状态，以及 RSS 订阅、分类、已读、收藏和阅读进度。
-- RSS 标题、摘要与正文由各客户端从来源获取并缓存在本机，不上传同步服务。
-- 主题、界面布局等设备偏好不参与同步。
-- 同步服务面向单用户、单实例；一套部署使用一个 256-bit 随机同步密钥。
-- 默认数据文件为主机 `./data/store.json`，同步不能替代备份。
-- AI 密钥可以只保存在服务器 `.env`；若选择客户端直连，则写入 Apple Keychain，不进入普通配置文件。
-
-## 同步如何工作
-
-1. 客户端先把修改写入本机，再异步上传。
-2. 任务按 `id` 与 `updatedAt` 合并，删除墓碑优先，避免旧设备恢复已删除任务。
-3. 番茄钟保存共享的 `endsAt`、阶段标识、每日目标与专注历史，并用响应中的 `serverTime` 校准设备时钟。
-4. 前台设备通过 `/v1/changes` 等待修订号变化；只有发生变化时才拉取完整状态。
-5. 5 分钟完整同步仅用于断线容错，不进行高频全量轮询。
-
-断线重连使用带抖动的指数退避，避免多台设备同时反复请求。iOS 被系统挂起或强制结束后不能维持普通网络连接；回到前台会立即补同步，系统实时活动本身仍按绝对结束时间显示倒计时。
-
-协议细节见 [同步协议 v1](docs/SYNC_PROTOCOL.md)。
-
-## 项目结构
-
-```text
-apps/apple/          SwiftUI iOS / macOS 客户端与 XcodeGen 工程定义
-apps/android/        基于 Flowtime 重构的独立 Flutter Android 客户端
-apps/flutter/        Flutter Windows 客户端
-services/sync/       Go 同步与可选 AI 代理服务
-deploy/tempo-services/ 生产服务器上的同步服务 1Panel Compose 编排
-scripts/ios/         iOS 扩展与签名辅助脚本
-scripts/windows/     Windows 安装包配置
-docs/                产品、架构、协议、部署与签名文档
-.github/workflows/   测试、四端构建、Docker 和自动 Release
-```
-
-`todo.darker.one` 是基于 VitePress 的开发与部署文档站，不是浏览器版任务客户端；源码位于 [`docs/`](docs/)。
-
-## 开发
-
-### Android
-
-```bash
-cd apps/android
-flutter pub get
-flutter analyze
-flutter test
-flutter run -d android
-```
-
-### Windows
-
-```bash
-cd apps/flutter
-flutter pub get
-flutter analyze
-flutter test
-flutter run -d windows
-```
-
-### iOS / macOS
-
-需要 macOS、最新版稳定版 Xcode 和 XcodeGen。Apple 客户端最低支持 iOS 17 与 macOS 15：
-
-```bash
-brew install xcodegen
-cd apps/ios-runtime
-npm ci
-npm run prebuild:ios
-npm run build:brownfield:ios
-cd ../apple
-xcodegen generate
-open TempoApple.xcodeproj
-```
-
-选择 `TempoiOS` 或 `TempomacOS` scheme。真机运行需要在本地配置自己的签名身份和描述文件。Apple 客户端保持原生系统表面，同时把可热更新内容作为 Expo Brownfield Swift Package 嵌入；OTA 不会替换原生权限、Widget 或灵动岛代码。
-
-### 同步服务
-
-```bash
-cd services/sync
-go test ./...
-go vet ./...
-```
+数据默认保存在本机；开启同步后，同步范围内的数据也会保存到你的服务器。同步不能代替备份，请保管好密钥和备份文件。
 
 ## 获取更新
 
-在应用中打开“设置 → 关于 Tempo”即可检查当前平台的新版本。iOS 中与现有运行时兼容的页面内容会自动 OTA 更新，不需要手动下载安装；涉及原生导航、权限、小组件或灵动岛的更新仍需安装新版 IPA。其他平台按系统提示下载并覆盖安装即可。
+在“设置 → 关于 Tempo”检查适合当前平台的新版本。iOS 的兼容页面更新会自动下载，并在下次重新启动应用时生效；原生功能更新仍需安装新版 IPA。
 
-## 文档
+覆盖安装前请保留原来的签名方式和本地数据，不要为了更新先卸载应用。
 
-- [产品范围](docs/PRODUCT.md)
-- [跨端设计规范](docs/DESIGN.md)
-- [系统架构](docs/ARCHITECTURE.md)
-- [同步协议 v1](docs/SYNC_PROTOCOL.md)
-- [自托管部署](docs/DEPLOYMENT.md)
-- [iOS 本机签名](docs/IOS_PRIVATE_SIGNING.md)
-- [Apple 客户端开发](apps/apple/README.md)
-- [Flutter 客户端开发](apps/flutter/README.md)
-- [同步服务开发](services/sync/README.md)
-- [第三方软件声明](THIRD_PARTY_NOTICES.md)
+## 帮助与反馈
+
+- [使用与设置](docs/CONFIGURATION.md)
+- [自托管同步](docs/DEPLOYMENT.md)
+- [iOS 安装与签名](docs/IOS_PRIVATE_SIGNING.md)
+- [报告问题或提出建议](https://github.com/awe0bit/Tempo/issues)
+
+反馈时请附上平台、应用版本、复现步骤和必要截图，不要上传同步密钥、API 密钥或私人任务内容。
 
 ## 许可
 
-Tempo 以 [GNU GPL v3](LICENSE) 发布。Android 客户端基于 MIT 许可的 Flowtime 重构，原始许可随源码保存在 `apps/android/FLOWTIME_LICENSE`；其他第三方组件仍分别遵循各自许可，详见 [第三方软件声明](THIRD_PARTY_NOTICES.md)。
+Tempo 采用 [GNU GPL v3](LICENSE)。第三方组件及 Android 所基于的 Flowtime 项目保留各自许可，详见 [第三方软件声明](THIRD_PARTY_NOTICES.md)。

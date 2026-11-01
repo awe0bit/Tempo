@@ -1,31 +1,33 @@
-# Tempo开发与部署文档
+# Tempo 使用指南
 
-这里是 Tempo 的正式技术文档，说明应用能做什么、如何配置各项功能、如何部署自己的同步服务，以及如何在不同平台安装和使用。Tempo 面向个人使用：数据默认保存在本机，也可以连接你自己的服务器完成实时同步。
+Tempo 把待办、日历、专注计时和 RSS 阅读放在一起。先在本机使用，需要多设备同步时再连接自己的服务器。
 
-## 从这里开始
+## 第一次使用
 
-| 目标 | 文档 |
+1. 从 [下载列表](https://github.com/awe0bit/Tempo/releases) 安装适合自己设备的版本。
+2. 在收集箱记下待办，再把需要安排的事情放到对应日期。
+3. 在“今天”查看任务；iOS 的番茄钟与 RSS 位于“工具”中。
+4. 在设置中调整外观、日历和专注参数。
+
+基本任务和计时不需要账号或服务器。获取新文章、AI 和同步功能需要网络。
+
+## 按需要查看
+
+| 你想做什么 | 查看哪里 |
 | --- | --- |
-| 部署自己的同步服务 | [自托管部署](/DEPLOYMENT) |
-| 配置 iPhone、Android、Mac 与 Windows | [完整配置指南](/CONFIGURATION) |
-| 配置 AI、天气与 RSS | [功能配置](/CONFIGURATION#功能配置索引) |
-| 在本机签名 iOS IPA | [iOS 本机签名](/IOS_PRIVATE_SIGNING) |
-| 了解客户端与服务端结构 | [系统架构](/ARCHITECTURE) |
-| 开发同步能力 | [同步协议](/SYNC_PROTOCOL) |
-| 保持四端视觉一致 | [设计规范](/DESIGN) |
+| 记录任务、使用日历、计时与 RSS | [使用与设置](CONFIGURATION.md) |
+| 切换深色外观或界面语言 | [外观与语言](CONFIGURATION.md#外观与语言) |
+| 在多台设备间同步 | [连接同步服务](CONFIGURATION.md#多设备同步) |
+| 搭建自己的同步服务器 | [自托管同步](DEPLOYMENT.md) |
+| 在 iPhone / iPad 上安装 IPA | [iOS 安装与签名](IOS_PRIVATE_SIGNING.md) |
+| 了解数据保存与更新 | [数据与更新](CONFIGURATION.md#数据与更新) |
 
-## 最短部署路径
+## 下载与反馈
 
-1. 在 Linux 服务器安装 Docker 与 Docker Compose。
-2. 进入 `services/sync`，复制其中的 `.env.example` 并使用同目录的 `docker-compose.yml`。
-3. 生成 64 位十六进制 `SYNC_TOKEN`，启动服务。
-4. 为服务配置 HTTPS 反向代理。
-5. 在各端填写同一个服务器根地址、同步密钥和不同的设备名称。
+不同平台可能分批更新。最新发布页没有对应安装包时，请在 [Release 列表](https://github.com/awe0bit/Tempo/releases) 中查找最近一个包含该平台的版本。
 
-完整命令、1Panel 配置、备份、升级和故障排查见[自托管部署](/DEPLOYMENT)。
+遇到问题可在 [GitHub Issues](https://github.com/awe0bit/Tempo/issues) 反馈，附上平台、版本和复现步骤。请勿上传密钥、签名材料或私人内容。
 
-## 项目入口
+## 参与开发
 
-- [GitHub 仓库](https://github.com/awe0bit/Tempo)
-- [下载最新版本](https://github.com/awe0bit/Tempo/releases/latest)
-- [构建状态](https://github.com/awe0bit/Tempo/actions)
+源码构建、项目结构与发布说明单独放在 [开发指南](DEVELOPMENT.md)，不影响日常使用。

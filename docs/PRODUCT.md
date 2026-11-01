@@ -2,7 +2,7 @@
 
 Tempo是一款面向个人的本地优先任务与专注应用。它不要求用户把数据交给第三方账号体系：客户端可以完全离线使用，也可以连接用户自行部署的轻量同步服务。
 
-返回：[文档首页](/) · [设计规范](/DESIGN) · [系统架构](/ARCHITECTURE) · [自托管部署](/DEPLOYMENT)
+返回：[文档首页](index.md) · [设计规范](DESIGN.md) · [系统架构](ARCHITECTURE.md) · [自托管部署](DEPLOYMENT.md)
 
 ## 产品目标
 
@@ -26,15 +26,15 @@ Tempo是一款面向个人的本地优先任务与专注应用。它不要求用
 
 ## 平台定位
 
-- **iOS**：纯 SwiftUI 主客户端，使用系统导航、WidgetKit 与 ActivityKit。
+- **iOS**：SwiftUI 原生壳与 React Native / TypeScript 内容层，保留原生导航、WidgetKit 与 ActivityKit。
 - **macOS**：纯 SwiftUI 桌面客户端，提供原生窗口和设置体验。
 - **Android**：Flutter 客户端，覆盖任务、专注、同步和基础设置。
 - **Windows**：Flutter 轻量桌面客户端，以置顶计时胶囊、今日任务和托盘操作为主。
-- **Web**：`todo.darker.one` 是 VitePress 开发与部署文档站，不提供浏览器版任务编辑。
+- **Web**：`todo.darker.one` 是使用与自托管指南，开发资料单独归类，不提供浏览器版任务编辑。
 
 ## 模块规则
 
-收集箱、今天、番茄钟、RSS 与设置构成五个稳定的一级入口。用户可以拖动调整顺序，但不能隐藏入口；iOS 不生成“更多”页，也不把两个模块合并。
+当前 iOS 使用收集箱、今天、工具和设置四个一级入口。番茄钟与 RSS 从工具页进入；功能模块设置支持拖动底部入口排序。其他客户端按各自的平台布局呈现，不以 iOS 导航数量描述所有平台。
 
 ## 交互原则
 

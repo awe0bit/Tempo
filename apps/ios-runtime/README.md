@@ -4,14 +4,15 @@
 
 - SwiftUI 保留 App 生命周期、系统导航、搜索、选项按钮、液态玻璃、权限、Keychain、App Group、小组件和 Live Activity。
 - React Native + TypeScript 承载收集箱、今天、工具和设置四个一级页面；番茄钟和 RSS 从工具页进入。
-- `expo-updates` 只发布与当前原生 runtime 兼容的 JavaScript、样式和静态资源；客户端会在启动和回到前台时静默检查、下载并自动应用，无需用户点按钮。
+- `expo-updates` 只发布与当前原生 runtime 兼容的 JavaScript、样式和静态资源；客户端在启动、回到前台和打开开发者工具时检查，自动下载，下次自然启动时生效，不强制重启。
 - Swift 数据层是唯一事实来源；TypeScript 通过 `TempoNativeBridge` 读取快照、订阅变化并提交动作。
 - 原有 Swift 数据文件继续直接使用；迁移不会清空任务、专注记录、RSS 订阅或同步配置。
 
 ## 本地验证
 
 ```bash
-npm install
+npm ci
+node --test tests/tool-navigation.test.mjs
 npm run typecheck
 npm run export:ios
 ```
@@ -32,8 +33,10 @@ npm run build:brownfield:ios
 3. 名称必须为 `EXPO_TOKEN`，值只粘贴到 GitHub，不写入源码、日志或聊天。
 4. 运行 `iOS OTA Runtime` 工作流，选择与安装包一致的更新通道；正式安装包使用 `production`。
 
-工作流会依次完成 TypeScript 检查、iOS 导出、Brownfield Swift Package 构建，全部通过后才向对应 EAS Channel 发布 Update。安装包内固定使用 `production` 通道，避免“更新已经上传但设备找不到”的 Branch/Channel 错配。
+OTA 工作流完成 TypeScript 检查和 iOS 导出后，向对应 EAS Channel 发布 Update。Brownfield Swift Package 由原生构建工作流处理，不在每次内容发布时重建。正式安装包使用 `production` 通道，更新必须与该通道和原生兼容版本匹配。
 
 ## 发布约束
 
-`runtime-version.txt` 是原生兼容边界，不再跟随 App 版本自动变化。纯 TypeScript、样式和静态资源更新保持该值不变，直接 OTA。只有原生依赖、权限、Bundle ID、entitlement、小组件、Live Activity、Swift 桥接协议或其他原生 ABI 发生变化时，才提升该文件中的版本并构建新 IPA。
+`runtime-version.txt` 是原生兼容边界，不跟随 App 版本自动变化。纯 TypeScript、样式和资源更新保持该值不变。原生实现改动需要新 IPA；只有不兼容的原生依赖或必需 API 变化才需要调整该值，可选桥接扩展通过 `capabilities` 保持旧包可用。
+
+参见 [开发指南](../../docs/DEVELOPMENT.md) 和 [iOS 架构与 OTA](../../docs/architecture/ios-ota.md)。

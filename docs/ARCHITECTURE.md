@@ -2,7 +2,7 @@
 
 Tempo 采用“三套客户端工程、一份同步协议、一个轻量服务端”的结构。iOS 使用 SwiftUI 原生壳与 React Native/TypeScript 内容层，macOS 保持 SwiftUI；Android 使用独立的 Flowtime 衍生 Flutter 工程；Windows 保留独立 Flutter 工程；所有客户端共享 Go 服务端的 JSON 协议。
 
-返回：[文档首页](/) · [产品范围](/PRODUCT) · [设计规范](/DESIGN) · [同步协议](/SYNC_PROTOCOL)
+返回：[文档首页](index.md) · [产品范围](PRODUCT.md) · [设计规范](DESIGN.md) · [同步协议](SYNC_PROTOCOL.md)
 
 ## 系统全景
 
@@ -42,7 +42,7 @@ flowchart LR
 
 任务数据使用平台应用数据目录中的 JSON 文件。主题、模块顺序等设备偏好留在本机；任务、番茄钟和 RSS 阅读状态进入同步文档。
 
-iOS 中只有页面内容、样式和静态资源允许通过 OTA 更新；系统导航、液态玻璃按钮、权限、小组件、灵动岛和数据层仍由 Swift 管理。完整边界见 [iOS 混合架构与 OTA](/architecture/ios-ota)。
+iOS 的页面内容、样式、静态资源和基于已有原生组件的路由可通过 OTA 更新。Swift 管理底部导航、顶部液态玻璃按钮、权限、小组件、灵动岛和数据层；设置与工具页面使用内容层的 React Navigation 原生栈。完整边界见 [iOS 架构与 OTA](architecture/ios-ota.md)。
 
 ### Apple 系统扩展
 
@@ -116,12 +116,11 @@ flowchart LR
   WIN --> RELEASE
   RELEASE --> SUM[SHA-256 + 来源证明]
   SUM --> VERSION[四端版本元数据回写]
-  OTA --> PREVIEW[Preview 更新分支]
-  PREVIEW --> PRODUCTION[验证后发布 Production]
+  OTA --> PRODUCTION[Production 内容更新]
 ```
 
 公开版本只使用 `x.y.z` 数字格式。一次发布只编译受影响的平台，其他平台不重复构建；客户端从 Release 列表中选择最近一个包含本平台资产的版本。TypeScript OTA 不改变安装包版本号。
 
-公开工作流只生成未签名 iOS IPA；个人证书不进入 GitHub Actions，真机包在本机 Xcode 中签名和导出。
+公开工作流只生成未签名 iOS IPA；个人证书不进入 GitHub Actions，真机包使用自己的本机签名流程安装。
 
 文档站与客户端发布分别由独立工作流处理，互不阻塞。工作流实现保留在仓库的 `.github/workflows` 中，不在用户文档展示内部发布细节。

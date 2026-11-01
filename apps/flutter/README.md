@@ -6,15 +6,14 @@
 
 ## 平台定位
 
-- **Android**：移动端任务、番茄钟、每日目标、专注热力图、同步与设置。
 - **Windows**：低占用桌面辅助端，以置顶计时胶囊、今日任务和系统托盘为主；同时提供便携版与安装版。
+- **Android**：不从本目录运行或构建，使用独立的 [Android 工程](../android/README.md)。
 
 `ios/` 和 `macos/` 中仍保留部分共享品牌资源、Widget 源文件与历史工程材料，供 Apple 原生工程复用；不要把它们误认为当前正式 Flutter Apple 客户端。
 
 ## 环境
 
 - 当前稳定版 Flutter，Dart SDK 版本满足 `pubspec.yaml`。
-- Android：Android Studio、Android SDK 和可用设备/模拟器。
 - Windows：Windows 10/11、Visual Studio 的“使用 C++ 的桌面开发”工作负载。
 
 检查环境：
@@ -33,13 +32,6 @@ Windows：
 flutter run -d windows
 ```
 
-Android：
-
-```bash
-flutter devices
-flutter run -d <设备ID>
-```
-
 ## 质量检查
 
 ```bash
@@ -50,12 +42,6 @@ flutter test
 提交到 `main` 后，GitHub Actions 会再次运行以上检查；任一检查失败都不会发布 Release。
 
 ## 本地构建
-
-Android APK：
-
-```bash
-flutter build apk --release
-```
 
 Windows：
 

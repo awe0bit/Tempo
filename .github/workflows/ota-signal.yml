@@ -6,7 +6,9 @@ on:
     paths:
       - "services/sync/**"
       - "deploy/tempo-services/**"
-      - ".github/workflows/ota-signal.yml"
+      - "!**/*.md"
+    # Workflow-only edits can be validated without redeploying the server;
+    # use workflow_dispatch when applying a deployment workflow change.
   workflow_dispatch:
 
 permissions:

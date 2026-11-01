@@ -1,44 +1,103 @@
-# Tempo configuration
+# Usage and settings
 
-This guide covers client-side setup after installation. Use the [deployment guide](/en/DEPLOYMENT) to run the sync service first.
+Start using local tasks and timers immediately after installation. Sync and AI are optional.
 
-## Setup map
+The paths below describe the current iOS client. Layouts and options may differ on other platforms.
 
-| Capability | Location | Required values |
-| --- | --- | --- |
-| Sync | Settings → Self-hosted sync | HTTPS base URL, 64-character token, unique device name |
-| AI | Settings → AI assistant | Provider; direct mode also needs an API key |
-| Weather | Settings → Weather and quote | QWeather API Host, key, Location ID and display city |
-| RSS | RSS → Subscriptions | RSS/Atom URL and source group |
+## Tasks and calendar
 
-## Language
+- **Inbox:** capture tasks first, then add notes and dates.
+- **Today:** select a date to view its tasks. Expand the calendar to a month or collapse it to a week.
+- **Complete and delete:** completed tasks retain their completed state. Swipe left to delete; use Undo in the notification if you change your mind.
 
-iOS supports Simplified Chinese and English and follows the system language by default. To override it only for Tempo, use **Settings → Tempo → Language**, then reopen the app. Tempo does not duplicate this system control inside the app.
+Tasks are saved on the device first, including while offline.
 
-## Sync clients
+## Tools
 
-Enter the same server base URL and token on every device, but use a different device name. Do not append `/v1/sync` to the URL. Save with “Verify, save and sync now”; this validates the server before credentials are persisted.
+### Pomodoro
 
-The service is designed for one person. Local writes are durable first, foreground clients receive change notifications immediately, and reconnects upload queued changes. iOS may be suspended in the background and catches up when it becomes active again.
+Open **Tools → Pomodoro**, choose Pomodoro or count-up mode, and start the timer. You can pause or stop a session.
 
-## AI
+Adjust session length, daily goals, and long-break intervals in **Settings → Pomodoro**. Open focus statistics from the timer page to review your records.
 
-The recommended setup keeps the provider key on your server:
+iOS supports Lock Screen Live Activities and Dynamic Island. Availability also depends on your device, permissions, and app signing; see the [iOS installation guide, in Chinese](../IOS_PRIVATE_SIGNING.md).
 
-```dotenv
-AI_BASE_URL=https://api.openai.com/v1/chat/completions
-AI_API_KEY=your-server-side-key
-AI_MODEL=gpt-5.6-terra
-```
+### RSS
 
-Run `docker compose up -d`, then select the self-hosted provider in Tempo. Direct OpenAI defaults to `gpt-5.6-terra`; Direct DeepSeek defaults to `deepseek-flash`. Existing custom model selections are not overwritten by an app upgrade. Direct API keys stay in platform secure storage and are not synced.
+1. Open **Tools → RSS**.
+2. Use the top-right menu to add an RSS or Atom feed URL.
+3. Refresh your sources and open an article.
+4. Configure AI below if you want summaries or translations.
 
-## Weather and daily quote
+Use a feed URL, not the website's home page. If refreshing fails, check that the URL returns feed content without requiring a login.
 
-Use the project-specific QWeather API Host without a scheme or path, the matching API key, a Location ID and a display city. Test the connection before saving. Hitokoto provides the daily quote without a key. Weather and quote now appear at the top of Inbox and retain the latest cache while offline.
+## Appearance and language
 
-## Secrets and updates
+Use **Settings → Appearance** to follow the system or choose light or dark mode.
 
-Sync tokens, direct AI keys and weather keys never enter the sync document. Stable identifiers and signing identities are required for in-place iOS/Android upgrades. Use Settings → About Tempo to open the latest GitHub Release.
+iOS supports Simplified Chinese and English and follows the system language. To change only Tempo, open its page in iOS Settings, select Language, and reopen the app. If the option is missing, check that the language is added to your system's preferred languages.
 
-For proxy, backup and container troubleshooting, continue with [self-hosted deployment](/en/DEPLOYMENT).
+**Settings → Date and calendar** controls the first weekday, festivals, and task markers. In **Settings → Feature modules**, long-press and drag to reorder the bottom navigation. The current iOS destinations are Inbox, Today, Tools, and Settings; Pomodoro and RSS are inside Tools.
+
+## Multi-device sync
+
+Skip this section if you use one device. Otherwise, [deploy your own sync service](DEPLOYMENT.md) first.
+
+Open **Settings → Self-hosted sync** on each device:
+
+| Field | Value |
+| --- | --- |
+| Server URL | HTTPS base URL, such as `https://sync.example.com` |
+| Device name | A distinct name, such as iPhone, Mac, or Windows-PC |
+| Verification key | The full 64-character token generated during deployment |
+| Automatic sync | Enable if needed |
+
+Use the same URL and token on every device, but different device names. Do not append `/v1/sync` or `/health`.
+
+The current iOS page has three separate actions:
+
+1. **Test connection:** checks the entered details without saving them.
+2. **Save configuration:** saves your settings. Leave an already-saved token blank to keep it.
+3. **Sync now:** runs one sync so you can check the result.
+
+With automatic sync enabled, edits are saved locally before being uploaded. Queued changes upload when the connection returns. iOS may suspend the app in the background; it catches up in the foreground rather than staying continuously online.
+
+## AI assistant
+
+Open **Settings → AI assistant**. Select OpenAI, DeepSeek, or a compatible API, then enter the API URL, model name, and API key supplied for your account.
+
+- Choose a model your account can access.
+- Leave the RSS summary prompt blank to use Tempo's built-in prompt.
+- Choose **Save** or **Save and test**.
+- Leave an already-saved key blank to keep it.
+
+AI is optional. A missing configuration or failed request does not prevent basic tasks and timers from working. Your provider may charge separately; review its pricing and privacy terms.
+
+Summaries and translations send the relevant article content to your configured AI service. Clients with a self-hosted AI option can use the server proxy described in the [deployment guide](DEPLOYMENT.md#environment); the current iOS provider selector does not expose that option.
+
+## Data and updates
+
+- Data is local by default. With sync enabled, tasks, focus state, RSS subscriptions, and reading state are also stored on your server.
+- Article bodies are fetched and cached on the device, not uploaded as article files to the sync service.
+- Device preferences, sync tokens, and AI keys are not part of task sync.
+- Sync is not a backup. Confirm sync and backups before removing app data or changing devices.
+
+Use **Settings → About Tempo** to check for a native build for your platform. Platforms may update separately.
+
+Compatible iOS page updates check and download automatically and take effect on the next app restart. Native controls, permissions, widgets, and Dynamic Island changes require a newer IPA. If a page update fails, the installed content remains available.
+
+Keep your app identity and signing setup for in-place updates. Do not uninstall just to update; doing so may remove local data.
+
+## Troubleshooting
+
+| Problem | Check first |
+| --- | --- |
+| Cannot find Pomodoro or RSS | Open Tools in the current iOS app |
+| Sync connection fails | HTTPS URL, full token, server availability; save after testing |
+| Tasks are missing on another device | Matching URL and token, automatic sync enabled |
+| RSS refresh fails | A valid feed URL that does not require a login |
+| AI connection fails | API URL, model access, key permissions, and service quota |
+| Widgets or Dynamic Island are unavailable | System permissions and complete app/extension signing |
+| An update cannot replace the app | Compatible app identity and signing setup |
+
+For further help, open a [GitHub issue](https://github.com/awe0bit/Tempo/issues). Include your platform, version, and reproduction steps, but no keys or private content.

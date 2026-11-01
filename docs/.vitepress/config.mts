@@ -47,37 +47,41 @@ export default defineConfig({
       label: '简体中文',
       lang: 'zh-CN',
       title: 'Tempo 文档',
-      description: 'Tempo 跨端开发、自托管同步与部署文档',
+      description: 'Tempo 使用指南、安装帮助与自托管同步',
       themeConfig: {
         ...sharedTheme,
         siteTitle: 'Tempo 文档',
         nav: [
-          { text: '配置', link: '/CONFIGURATION' },
-          { text: '部署', link: '/DEPLOYMENT' },
-          { text: '架构', link: '/ARCHITECTURE' },
-          { text: '安全', link: '/SECURITY_PERFORMANCE' },
-          { text: '同步协议', link: '/SYNC_PROTOCOL' },
+          { text: '使用指南', link: '/CONFIGURATION' },
+          { text: '自托管同步', link: '/DEPLOYMENT' },
+          { text: '开发资料', items: [
+            { text: '开发指南', link: '/DEVELOPMENT' },
+            { text: '系统架构', link: '/ARCHITECTURE' },
+            { text: '设计规范', link: '/DESIGN' }
+          ] },
           { text: '下载', link: downloads }
         ],
         sidebar: [
           {
-            text: '开始',
+            text: '开始使用',
             items: [
-              { text: '文档首页', link: '/' },
-              { text: '产品范围', link: '/PRODUCT' }
+              { text: '欢迎使用 Tempo', link: '/' },
+              { text: '使用与设置', link: '/CONFIGURATION' },
+              { text: 'iOS 安装与签名', link: '/IOS_PRIVATE_SIGNING' }
             ]
           },
           {
-            text: '部署与维护',
+            text: '自托管',
             items: [
-              { text: '完整配置指南', link: '/CONFIGURATION' },
-              { text: '自托管同步', link: '/DEPLOYMENT' },
-              { text: 'iOS 本机签名', link: '/IOS_PRIVATE_SIGNING' }
+              { text: '部署、备份与维护', link: '/DEPLOYMENT' }
             ]
           },
           {
-            text: '开发',
+            text: '开发资料',
+            collapsed: true,
             items: [
+              { text: '开发指南', link: '/DEVELOPMENT' },
+              { text: '产品范围', link: '/PRODUCT' },
               { text: '系统架构', link: '/ARCHITECTURE' },
               { text: 'iOS OTA 架构', link: '/architecture/ios-ota' },
               { text: '安全与性能审计', link: '/SECURITY_PERFORMANCE' },
@@ -99,13 +103,14 @@ export default defineConfig({
       label: 'English',
       lang: 'en-US',
       title: 'Tempo Documentation',
-      description: 'Cross-platform clients and self-hosted sync for Tempo',
+      description: 'Using Tempo, installing clients, and self-hosted sync',
       themeConfig: {
         ...sharedTheme,
         siteTitle: 'Tempo Docs',
         nav: [
-          { text: 'Configure', link: '/en/CONFIGURATION' },
-          { text: 'Deploy', link: '/en/DEPLOYMENT' },
+          { text: 'User guide', link: '/en/CONFIGURATION' },
+          { text: 'Self-hosted sync', link: '/en/DEPLOYMENT' },
+          { text: 'Develop', link: '/en/DEVELOPMENT' },
           { text: 'Download', link: downloads }
         ],
         sidebar: [
@@ -113,8 +118,17 @@ export default defineConfig({
             text: 'Get started',
             items: [
               { text: 'Overview', link: '/en/' },
-              { text: 'Configuration', link: '/en/CONFIGURATION' },
+              { text: 'Usage and settings', link: '/en/CONFIGURATION' },
               { text: 'Self-hosted sync', link: '/en/DEPLOYMENT' }
+            ]
+          },
+          {
+            text: 'Development',
+            collapsed: true,
+            items: [
+              { text: 'Development guide', link: '/en/DEVELOPMENT' },
+              { text: 'iOS signing (中文)', link: '/IOS_PRIVATE_SIGNING' },
+              { text: 'Architecture (中文)', link: '/ARCHITECTURE' }
             ]
           }
         ],

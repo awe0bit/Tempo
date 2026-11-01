@@ -1,8 +1,8 @@
 # Tempo同步服务部署
 
-本文用于在自己的 Linux 服务器上部署 Tempo 同步与可选 AI 代理。客户端安装包从 [GitHub Releases](https://github.com/awe0bit/Tempo/releases/latest) 获取；`todo.darker.one` 是开发与部署文档站，不是同步后台所必需。
+本文用于在自己的 Linux 服务器上部署 Tempo 同步与可选 AI 代理。客户端安装包从 [GitHub Releases](https://github.com/awe0bit/Tempo/releases) 获取；文档站不是使用同步服务的必要条件。只在单台设备上使用基本任务和计时时，无需部署。
 
-返回：[文档首页](/) · [完整配置指南](/CONFIGURATION) · [系统架构](/ARCHITECTURE) · [同步协议](/SYNC_PROTOCOL)
+返回：[文档首页](index.md) · [完整配置指南](CONFIGURATION.md) · [系统架构](ARCHITECTURE.md) · [同步协议](SYNC_PROTOCOL.md)
 
 ## 部署结果
 
@@ -70,14 +70,14 @@ echo "$TOKEN"
 | `GOMEMLIMIT` | `48MiB` | Go 运行时软内存限制 |
 | `AI_BASE_URL` | OpenAI Chat Completions | 可选 AI 兼容接口地址 |
 | `AI_API_KEY` | 空 | 留空即禁用服务端 AI 代理 |
-| `AI_MODEL` | `gpt-5.6-terra` | 服务端 AI 模型名称 |
+| `AI_MODEL` | 见 `.env.example` | 启用 AI 时改为自己账号可访问的模型名称 |
 
 启用自托管 AI 代理时只需编辑 `.env`：
 
 ```dotenv
 AI_BASE_URL=https://api.openai.com/v1/chat/completions
 AI_API_KEY=你的密钥
-AI_MODEL=gpt-5.6-terra
+AI_MODEL=你的账号可访问的模型名称
 ```
 
 然后执行 `docker compose up -d`。AI 密钥只进入服务器容器环境，不会随同步响应下发给客户端。
@@ -135,7 +135,7 @@ curl -i https://你的域名/v1/ping
 
 ## 连接客户端
 
-在每台设备打开“设置 → 多端同步”：
+在每台设备打开同步设置（当前 iOS 为“设置 → 自托管同步”）：
 
 ```text
 服务器地址：https://你的域名
@@ -146,9 +146,9 @@ curl -i https://你的域名/v1/ping
 
 服务器地址只填写基址，不要追加 `/v1/sync`。保存后点击“测试连接”。
 
-若要使用服务器 AI，在“设置 → AI 助手”中选择“自托管服务器”，应用会复用当前同步地址和同步密钥；无需把模型 API Key 填到客户端。
+客户端如提供自托管 AI 选项，可复用同步地址和密钥访问服务器代理；当前 iOS 的服务商选择器只提供 OpenAI、DeepSeek 与兼容接口，不应把同步地址直接填成 AI 接口地址。
 
-天气、每日一句、RSS 与 AI 直连的字段说明见[完整配置指南](/CONFIGURATION)。
+RSS、AI 直连和客户端操作见 [使用与设置](CONFIGURATION.md)。
 
 ## 同步行为
 
@@ -165,10 +165,9 @@ curl -i https://你的域名/v1/ping
 ## 更新
 
 ```bash
-cd TEMPO
+cd Tempo/services/sync
 git pull --ff-only
-docker compose pull
-docker compose up -d
+docker compose up -d --build
 docker compose ps
 curl -fsS http://127.0.0.1:8080/health
 ```
@@ -183,12 +182,12 @@ docker image prune --filter label=org.opencontainers.image.title=tempo-sync
 
 ## 备份与恢复
 
-默认数据文件是仓库目录下的 `data/store.json`。它包含任务、删除墓碑、番茄钟和 RSS 阅读状态，应按敏感数据保护。
+按本文部署时，默认数据文件是 `services/sync/data/store.json`；若自定义了 `SYNC_DATA_DIR`，使用该目录。它包含任务、删除墓碑、番茄钟和 RSS 阅读状态，应按敏感数据保护。
 
 ### 一致性备份
 
 ```bash
-cd TEMPO
+cd Tempo/services/sync
 docker compose stop sync
 tar -C data -czf "tempo-sync-$(date +%F-%H%M%S).tar.gz" store.json
 docker compose start sync
@@ -198,7 +197,7 @@ curl -fsS http://127.0.0.1:8080/health
 ### 恢复
 
 ```bash
-cd TEMPO
+cd Tempo/services/sync
 docker compose stop sync
 tar -C data -xzf /安全路径/tempo-sync-日期.tar.gz
 sudo chown -R 65532:65532 data

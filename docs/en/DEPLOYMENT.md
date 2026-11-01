@@ -1,6 +1,6 @@
 # Self-hosted sync
 
-After the service is healthy, use the [client configuration guide](/en/CONFIGURATION) for sync, AI, weather and RSS settings.
+After the service is healthy, use the [user guide](CONFIGURATION.md) to connect clients and configure AI and RSS. A server is optional for basic local use.
 
 This guide deploys Tempo's personal sync service on a Linux server. `todo.darker.one` hosts documentation only and is not required by the clients.
 
@@ -43,7 +43,7 @@ The repository also includes [`deploy/tempo-services`](https://github.com/awe0bi
 | `GOMEMLIMIT` | `48MiB` | Go runtime soft memory limit |
 | `AI_BASE_URL` | OpenAI-compatible endpoint | Optional server-side AI endpoint |
 | `AI_API_KEY` | empty | Leave empty to disable the AI proxy |
-| `AI_MODEL` | `gpt-5.6-terra` | Model name sent to the endpoint |
+| `AI_MODEL` | See `.env.example` | Set to a model your account can access before enabling AI |
 
 ## HTTPS reverse proxy
 
@@ -78,7 +78,7 @@ The second command should return `401` without a token. This confirms that HTTPS
 
 ## Connect clients
 
-Open **Settings → Multi-device sync** on every device and enter:
+Open the sync settings on each device (**Settings → Self-hosted sync** on current iOS) and enter:
 
 ```text
 Server URL: https://your-domain.example
@@ -92,16 +92,15 @@ Enter the base URL only; do not append `/v1/sync`. Save, then run the connection
 ## Update
 
 ```bash
-cd TEMPO
+cd Tempo/services/sync
 git pull --ff-only
-docker compose pull
-docker compose up -d
+docker compose up -d --build
 curl -fsS http://127.0.0.1:8080/health
 ```
 
 ## Backup
 
-The default data file is `data/store.json`.
+With this setup, the data file is `services/sync/data/store.json`. Run the following from `services/sync`; use your chosen directory if you changed `SYNC_DATA_DIR`.
 
 ```bash
 docker compose stop sync

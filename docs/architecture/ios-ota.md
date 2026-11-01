@@ -1,68 +1,69 @@
-# iOS 混合架构与 OTA
+# iOS 架构与 OTA
 
-Tempo iOS 采用 **SwiftUI 原生壳 + React Native/TypeScript 内容层**。这不是把 Apple 客户端整体改成跨平台应用，而是将适合快速迭代的页面内容与必须由系统原生实现的能力分开。
+本页面向开发者。用户只需阅读 [使用指南中的更新说明](../CONFIGURATION.md#更新应用)。
+
+Tempo iOS 使用 SwiftUI 原生壳和 Expo Brownfield 嵌入的 React Native / TypeScript 内容层，macOS 仍使用独立 SwiftUI 界面。
 
 ## 所有权边界
 
-| SwiftUI 原生壳 | TypeScript OTA 内容层 |
+| 原生层 | 内容层 |
 | --- | --- |
-| App 生命周期与 Scene | 任务列表与编辑内容 |
-| Tab/Navigation、搜索、菜单和液态玻璃按钮 | RSS 列表、分类、文章内容与翻译状态 |
-| Keychain、App Group、通知和后台任务 | 番茄钟主页面和统计内容 |
-| WidgetKit、锁屏小组件和 Live Activity | 设置页的业务选项内容 |
-| 本地数据库、同步引擎和冲突处理 | 页面布局、动效、文案和静态资源 |
-| 原生权限与深链 | 通过桥接发出受控业务动作 |
+| 生命周期、启动动画、底部 UITabBar | 收集箱、今天、工具、设置页面 |
+| 顶部液态玻璃按钮、搜索和菜单 | 通过已有 React Navigation 原生栈组织页面转场 |
+| Keychain、App Group、通知、后台任务 | 设置表单、任务编辑与阅读操作内容 |
+| WidgetKit、Live Activity、灵动岛 | 番茄钟页面和专注统计 |
+| 数据持久化、同步和网络业务动作 | 布局、文案、样式和兼容业务逻辑 |
 
-## 横屏适配
+使用已经存在的原生组件可以通过 OTA 调整页面；修改原生组件本身的 Swift 实现仍需新 IPA。不要把“使用原生栈”和“每次调整导航都必须重装”混为一谈。
 
-- iPhone 竖屏保持单列和底部导航；横屏内容层改为双栏或“列表 + 详情”，系统导航仍由 SwiftUI 提供。
-- iPad 根据可用宽度使用分栏，不把手机界面等比例放大。
-- 页面不得依据固定设备型号判断布局，只依据 safe area、动态字体和可用宽度。
-- 小组件和 Live Activity 不跟随主应用页面旋转，继续使用各自的系统布局族。
+## 启动与数据
 
-## 数据原则
+原生开屏独立于业务数据加载，应用服务和内容运行时延后挂载。内容准备好后再淡入主界面，保留运行时超时后的恢复入口。
 
-Swift 数据层始终是唯一事实来源。OTA 层不维护第二份独立数据库，也不直接持有同步密钥。
+Swift 数据层是唯一事实来源：
 
-1. Swift 通过 `bootstrap` 提供当前路由、主题、语言和数据修订号。
-2. TypeScript 订阅 `tempoStateDidChange`，只消费不可变快照。
-3. 新增、完成、删除、移动任务等操作通过 `perform(action, payload)` 回到 Swift。
-4. Swift 完成持久化与同步后，再广播新的修订号和快照。
+1. 内容层请求 `tempo.bootstrap` 获取快照。
+2. 通过 `tempo.snapshot` 接收后续状态。
+3. 通过 `tempo.perform` 提交动作，由 Swift 校验、持久化并同步。
+4. 原生通过 `tempo.command` 发送导航、搜索等指令。
+
+原生能力使用快照中的 `capabilities` 协商。新增可选能力时，旧安装包必须能忽略相关内容路径，不能让 OTA 调用不存在的接口。
+
+## 页面与按钮动效
+
+工具页通过 React Navigation 原生栈进入番茄钟和 RSS。页面转场与顶部 SwiftUI 按钮是不同层，按钮透明度使用实际页面进度驱动；退出时保留按钮到淡出结束，返回手势取消时恢复。
+
+工具按钮进度使用 `tempo.navigation-progress` 的 `toolChrome` scope，与设置二级页面的底栏进度分开，避免互相覆盖。该桥接能力需要对应原生包支持。
 
 ## 更新策略
 
-- `preview`：内测设备验证。
-- `production`：验证通过后发布给正式运行时。
-- runtime version 与 IPA 的应用版本一致，例如 `0.3.2`。
-- 启动时检查更新，失败立即使用上一次可工作的内置 bundle。
-- 五个一级页面共享同一套原生数据桥；OTA 更新失败时由 `expo-updates` 回退到安装包内置 bundle。
+- 原生兼容版本位于 `apps/ios-runtime/runtime-version.txt`，不跟随安装包版本自动变化。
+- 正式通道为 `production`；手动验证可使用 `preview`。
+- 应用启动、从后台回到前台，以及打开开发者工具时检查更新。
+- 没有服务器发布信号连接，也没有周期性 OTA 轮询。
+- 可用更新自动下载，下次自然启动时应用；不在 React 根节点强制重启应用。
+- 下载失败继续使用已有内容，由 `expo-updates` 管理已下载更新及恢复路径。
+
+纯 TypeScript、样式和资源变更保持兼容版本不变。原生依赖、必需桥接协议或系统能力不兼容时，调整兼容版本并发布 IPA；可选桥接扩展也需要新 IPA，但旧包应通过能力判断继续工作。
 
 ## 开发者工具
 
-iOS 底部导航的“设置”入口支持隐藏手势：连续点击四次，或长按约 0.65 秒，打开开发者工具。面板默认以半屏 Sheet 呈现，可以拖动或点击右上角按钮切换到全屏；横屏和 iPad 使用双列布局。
+连续点击底部“设置”四次，或长按约 0.65 秒打开。当前面板由 TypeScript 承载，系统 Sheet 负责呈现。
 
-当前工具提供：
+面板可查看 OTA 检查、下载、待重启状态，以及运行时、通道、更新标识、应用和同步诊断。打开面板会发起一次更新检查；具体可见字段以 `DeveloperToolsScreen.tsx` 为准。
 
-- OTA runtime、production 通道与 EAS 兼容清单检查。
-- 原生 OTA 容器是否已经嵌入的明确状态；未嵌入时不显示虚假的“应用更新”操作。
-- 同步 revision、待上传修改数、实时同步状态和手动同步。
-- Widget 扩展、App Group 与 Live Activity 权限检查。
-- 应用版本、构建号、Bundle ID 和系统信息。
-- 不包含服务器地址、同步密钥或 API 密钥的脱敏诊断报告。
+不要在诊断信息中输出同步密钥、AI 密钥、证书或私人任务内容。
 
-首次嵌入 React Native/Expo 原生容器本身仍属于原生依赖变更，需要发布一次新 IPA。此后只有与当前 runtime version 兼容的 TypeScript、样式与资源更新才能通过 OTA 下发。
+## 本地检查与发布
 
-## 必须重新构建 IPA 的变化
+```bash
+cd apps/ios-runtime
+npm ci
+node --test tests/tool-navigation.test.mjs
+npm run typecheck
+npm run export:ios
+```
 
-- 新增或升级原生依赖。
-- 修改权限、entitlement、Bundle ID 或 App Group。
-- 修改 WidgetKit、Live Activity、后台模式或原生桥接协议。
-- 使用当前二进制中不存在的原生 API。
+`ios-ota.yml` 执行检查与导出，然后发布 EAS Update。它不构建新的 Brownfield Swift Package；原生包由 `build-release.yml` 的 Apple 作业构建。
 
-## 当前迁移状态
-
-- 收集箱与今天：任务展示、添加、完成、删除、撤销、改期和日历内容已迁移。
-- 番茄钟：主页面、统计和设置已迁移；计时状态、后台执行与 Live Activity 仍由 Swift 管理。
-- RSS：订阅列表、筛选、阅读、AI 摘要和正文覆盖翻译已迁移；抓取、缓存与同步仍由 Swift 管理。
-- 设置：同步、AI、偏好和“关于 Tempo”中的版本更新内容已迁移；Keychain、App Group 与开发者工具仍由 Swift 管理。
-- SwiftUI 继续负责底部原生导航、顶部搜索/选项/统计按钮及所有系统扩展。
+完整构建步骤与提交约定见 [开发指南](../DEVELOPMENT.md)。CI 成功不等于真机通过，发布后仍需分别验证冷启动、前台恢复、页面进入、返回完成和手势取消。

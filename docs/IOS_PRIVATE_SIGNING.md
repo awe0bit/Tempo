@@ -2,7 +2,7 @@
 
 公开 Release 提供包含 Widget/Live Activity 扩展的未签名 IPA。要在真机安装，必须在本机使用自己的 Apple 身份签名。仓库不会在 GitHub Actions 中读取、保存或使用个人签名私钥。
 
-返回：[文档首页](/) · [自托管部署](/DEPLOYMENT)
+返回：[文档首页](index.md) · [自托管部署](DEPLOYMENT.md)
 
 ## 必须保持的标识
 
