@@ -135,6 +135,13 @@ body {
   font-weight: 560;
 }
 
+/* Utility controls are one group, not a sequence of separated sections. */
+.VPNavBar .content-body > .translations::before,
+.VPNavBar .content-body > .appearance::before,
+.VPNavBar .content-body > .social-links::before {
+  display: none;
+}
+
 /* Leave sidebar offsets and wide-layout widths to the theme's matching rules. */
 .VPSidebar {
   background: var(--tempo-surface) !important;
@@ -338,15 +345,15 @@ body {
   box-shadow: none;
 }
 
-/* Page outline uses the same row rhythm, with no cramped rail or ellipsis. */
+/* Delimit the article from its outline without boxing in the document. */
 .VPDocAsideOutline .content {
-  border-left: 0;
-  padding-left: 0;
+  border-left: 1px solid var(--tempo-line);
+  padding-left: 16px;
 }
 
 .VPDocAsideOutline .outline-title {
   margin-bottom: 8px;
-  padding: 0 12px;
+  padding: 0 10px;
   color: var(--tempo-muted);
   font-size: 12px;
   font-weight: 600;
@@ -357,7 +364,7 @@ body {
   position: relative;
   min-height: 36px;
   border-radius: 10px;
-  padding: 7px 12px;
+  padding: 7px 10px;
   overflow: visible;
   color: var(--tempo-muted);
   font-size: 14px;
@@ -377,6 +384,10 @@ body {
 .VPDocAsideOutline .outline-link.active {
   color: var(--tempo-blue);
   font-weight: 500;
+}
+
+.VPDocAsideOutline .outline-link.active::before {
+  left: -17px;
 }
 
 .VPDocAsideOutline .outline-marker {
@@ -410,12 +421,13 @@ body {
 @media (min-width: 768px) {
   .VPNavBarSearch {
     flex: 1 1 auto;
+    justify-content: center;
     padding-left: 16px;
   }
 
   .VPNavBarSearch #local-search {
     width: 100%;
-    max-width: 420px;
+    max-width: 320px;
     min-width: 0;
   }
 

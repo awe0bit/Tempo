@@ -82,13 +82,6 @@ export default defineConfig({
           linkText: '返回首页'
         },
         nav: [
-          { text: '使用指南', link: '/CONFIGURATION' },
-          { text: '自托管同步', link: '/DEPLOYMENT' },
-          { text: '开发资料', items: [
-            { text: '开发指南', link: '/DEVELOPMENT' },
-            { text: '系统架构', link: '/ARCHITECTURE' },
-            { text: '设计规范', link: '/DESIGN' }
-          ] },
           { text: '下载', link: downloads }
         ],
         sidebar: [
@@ -139,13 +132,6 @@ export default defineConfig({
         ...sharedTheme,
         siteTitle: 'Tempo Docs',
         nav: [
-          { text: 'User guide', link: '/en/CONFIGURATION' },
-          { text: 'Self-hosted sync', link: '/en/DEPLOYMENT' },
-          { text: 'Develop', items: [
-            { text: 'Development guide', link: '/en/DEVELOPMENT' },
-            { text: 'Architecture', link: '/en/ARCHITECTURE' },
-            { text: 'Design guidelines', link: '/en/DESIGN' }
-          ] },
           { text: 'Download', link: downloads }
         ],
         sidebar: [

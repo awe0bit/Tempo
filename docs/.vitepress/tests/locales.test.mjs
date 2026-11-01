@@ -62,6 +62,14 @@ test('both navigation menus expose the same translated destinations', () => {
   }
 })
 
+test('the header keeps downloads without duplicating sidebar navigation', () => {
+  for (const locale of Object.values(config.locales)) {
+    const nav = locale.themeConfig.nav
+    assert.equal(nav.length, 1)
+    assert.equal(nav[0].link, 'https://github.com/awe0bit/Tempo/releases/latest')
+  }
+})
+
 test('English documentation links stay in English and target existing pages', () => {
   for (const path of english) {
     const source = readFileSync(resolve(docs, path), 'utf8')
