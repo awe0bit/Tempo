@@ -17,7 +17,7 @@ Tempo 把待办、日历、专注计时和 RSS 阅读放在一起。先在本机
 | --- | --- |
 | 记录任务、使用日历、计时与 RSS | [使用与设置](CONFIGURATION.md) |
 | 切换深色外观或界面语言 | [外观与语言](CONFIGURATION.md#外观与语言) |
-| 在多台设备间同步 | [连接同步服务](CONFIGURATION.md#多设备同步) |
+| 在多台设备间同步 | [扫码配对](PAIRING.md) |
 | 搭建自己的同步服务器 | [自托管同步](DEPLOYMENT.md) |
 | 在 iPhone / iPad 上安装 IPA | [iOS 安装与签名](IOS_PRIVATE_SIGNING.md) |
 | 了解数据保存与更新 | [数据与更新](CONFIGURATION.md#数据与更新) |

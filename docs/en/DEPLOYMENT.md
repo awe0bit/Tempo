@@ -28,7 +28,7 @@ curl -fsS http://127.0.0.1:8080/health
 echo "$TOKEN"
 ```
 
-The health endpoint should return `{"status":"ok"}`. Save the token in a password manager; the server never returns it through an API.
+The health endpoint should return `{"status":"ok"}`. Keep the token in a password manager. It is never printed in QR codes or logs; a device receives it over HTTPS only after confirming a one-time pairing invitation.
 
 The repository also includes [`deploy/tempo-services`](https://github.com/awe0bit/Tempo/tree/main/deploy/tempo-services) for the production server. It registers the sync service as the `tempo-services` Compose project in 1Panel.
 
@@ -78,16 +78,13 @@ The second command should return `401` without a token. This confirms that HTTPS
 
 ## Connect clients
 
-Open the sync settings on each device (**Settings → Self-hosted sync** on current iOS) and enter:
+Current iOS uses server-generated QR pairing, without manual URL or token entry. From the directory containing the running sync Compose project, run:
 
-```text
-Server URL: https://your-domain.example
-Sync token: the complete SYNC_TOKEN
-Device name: a unique name such as iPhone or Windows-PC
-Automatic sync: enabled
-```
+~~~bash
+docker compose exec sync /tempo-sync pair --server https://your-sync-domain.example
+~~~
 
-Enter the base URL only; do not append `/v1/sync`. Save, then run the connection test.
+On iOS, open **Settings → Self-hosted Sync → Scan to pair**, scan, and confirm the server. Codes expire after 5 minutes and can be redeemed once; generating a new one revokes the previous invitation. See [QR pairing](PAIRING.md) for 1Panel instructions.
 
 ## Update
 

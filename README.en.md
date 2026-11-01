@@ -51,7 +51,7 @@ Tasks and timers work offline. Fetching new RSS articles, AI processing, and cro
 
 ## Use multiple devices
 
-Sync is optional. [Deploy your own sync service](docs/en/DEPLOYMENT.md), then enter the same server URL and token in each device's sync settings.
+Sync is optional. [Deploy your own sync service](docs/en/DEPLOYMENT.md), then [pair iOS by scanning its QR code](docs/en/PAIRING.md). Codes are generated only on the server; the app has no manual server or token entry.
 
 Data is stored locally by default. With sync enabled, synced data is also stored on your server. Sync is not a backup; keep your token and backup files safe.
 

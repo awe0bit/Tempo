@@ -53,7 +53,7 @@ echo "$TOKEN"
 {"status":"ok"}
 ```
 
-请立即把 `$TOKEN` 保存到密码管理器。服务端不会通过接口返回该密钥，遗失后只能更换密钥并重新配置所有设备。
+请把 `$TOKEN` 保存到密码管理器。它不会显示在二维码或日志中；扫码确认后才通过 HTTPS 兑换给设备。遗失或泄漏后需更换密钥，并重新配对设备。
 
 生产服务器可使用仓库中的 [`deploy/tempo-services`](https://github.com/awe0bit/Tempo/tree/main/deploy/tempo-services) 编排。生产工作流会将同步服务注册到 1Panel 的“容器 → 编排”，配置文件固定在 `/opt/1panel/docker/compose/tempo-services`。
 
@@ -135,16 +135,15 @@ curl -i https://你的域名/v1/ping
 
 ## 连接客户端
 
-在每台设备打开同步设置（当前 iOS 为“设置 → 自托管同步”）：
+当前 iOS 使用服务器生成的二维码配对，不再手动输入地址或密钥。在同步服务所在的编排目录执行：
 
-```text
-服务器地址：https://你的域名
-同步密钥：SYNC_TOKEN 的完整 64 位值
-设备名称：例如 iPhone、Windows-PC
-自动同步：开启
-```
+~~~bash
+docker compose exec sync /tempo-sync pair --server https://你的同步域名
+~~~
 
-服务器地址只填写基址，不要追加 `/v1/sync`。保存后点击“测试连接”。
+然后在 iOS 打开“设置 → 自托管同步 → 扫码配对”，扫描并确认服务器。
+
+二维码 5 分钟内有效，仅可使用一次；生成新码会让旧码失效。二维码不含长期同步密钥。详细步骤与 1Panel 操作见 [扫码配对](PAIRING.md)。
 
 客户端如提供自托管 AI 选项，可复用同步地址和密钥访问服务器代理；当前 iOS 的服务商选择器只提供 OpenAI、DeepSeek 与兼容接口，不应把同步地址直接填成 AI 接口地址。
 

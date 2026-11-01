@@ -78,7 +78,7 @@ iOS 主应用与 `TEMPOWidgets` 扩展通过 `group.one.darker.qingxu` App Group
 
 ## 同步服务
 
-`services/sync` 是仅依赖 Go 标准库的单进程 HTTP 服务：
+`services/sync` 是单进程 Go HTTP 服务。同步与鉴权使用标准库，服务器二维码由固定版本的 `go-qrcode` 编码：
 
 - `GET /health`：检查进程与数据目录可写性。
 - `GET /v1/ping`：验证 Bearer 密钥。

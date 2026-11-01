@@ -1,5 +1,19 @@
 # Tempo同步协议 v1
 
+## 扫码配对扩展
+
+同步仍沿用现有 Bearer 密钥，新设备可通过服务器生成的一次性二维码完成凭据交换。
+
+- `POST /v1/pairing/create`：需要现有管理员 Bearer 密钥，仅接受无代理转发头的本机回环连接；由服务器 CLI 调用，不向应用提供生成入口。
+- 创建结果为随机 256-bit `code` 与 `expiresAt`。5 分钟有效，内存中只保存一份活动邀请的 SHA-256 摘要；新邀请撤销旧邀请，重启也使邀请失效。
+- `POST /v1/pairing/redeem`：请求体仅含 `code`；无需预先持有同步密钥。匹配、消费在同一互斥锁内完成，并发请求只有一次可成功。
+- 成功兑换返回 `token`，响应禁止缓存。无效、过期、重复使用均返回 `401`，错误不回显输入。客户端通过 HTTPS 交换，拒绝重定向并在验证后才保存到 Keychain。
+- 二维码内容为 JSON，字段仅包含 `type: tempo-sync-pair`、`v: 1`、HTTPS 根地址 `server` 和临时 `code`；不包含长期密钥，不使用查询参数传递凭据。
+
+本扩展不修改现有同步文档，也不轮换既有 `SYNC_TOKEN`。已配对设备仍共享该密钥；若需撤销既有设备，需要轮换密钥并重新配对全部设备，不能把邀请失效误认为设备凭据已撤销。
+
+操作说明见 [扫码配对](PAIRING.md)。
+
 本文描述当前服务端已经实现并由自动化测试覆盖的 HTTP/JSON 协议。示例基址为 `https://todo.darker.one`；自托管时替换为自己的 HTTPS 域名。
 
 返回：[文档首页](index.md) · [系统架构](ARCHITECTURE.md) · [部署说明](DEPLOYMENT.md)
@@ -7,7 +21,7 @@
 ## 约定
 
 - 生产环境只使用 HTTPS。
-- `/v1/*` 使用 `Authorization: Bearer <SYNC_TOKEN>`。
+- `/v1/*` 使用 `Authorization: Bearer <SYNC_TOKEN>`，一次性配对码兑换接口除外。
 - `SYNC_TOKEN` 必须是 64 个十六进制字符，即 256-bit 随机值。
 - JSON 编码为 UTF-8；接口响应包含 `Cache-Control: no-store`。
 - 时间使用 UTC RFC 3339，客户端应优先生成带毫秒或更高精度的值。
@@ -22,6 +36,8 @@
 | `POST` | `/v1/sync` | 是 | 合并并返回任务、番茄钟、RSS 与迁移工作区状态 |
 | `GET` | `/v1/changes?since=<revision>` | 是 | 等待修订号变化，最长 25 秒 |
 | `POST` | `/v1/ai` | 是 | 可选 RSS 摘要、翻译和任务规划代理 |
+| `POST` | `/v1/pairing/create` | 是，且仅本机 | 服务器终端生成一次性邀请 |
+| `POST` | `/v1/pairing/redeem` | 临时配对码 | 兑换设备连接凭据，不修改同步数据 |
 
 ## 健康检查
 

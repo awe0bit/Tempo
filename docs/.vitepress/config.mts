@@ -67,6 +67,7 @@ export default defineConfig({
             items: [
               { text: '欢迎使用 Tempo', link: '/' },
               { text: '使用与设置', link: '/CONFIGURATION' },
+              { text: '扫码配对', link: '/PAIRING' },
               { text: 'iOS 安装与签名', link: '/IOS_PRIVATE_SIGNING' }
             ]
           },
@@ -119,6 +120,7 @@ export default defineConfig({
             items: [
               { text: 'Overview', link: '/en/' },
               { text: 'Usage and settings', link: '/en/CONFIGURATION' },
+              { text: 'QR pairing', link: '/en/PAIRING' },
               { text: 'Self-hosted sync', link: '/en/DEPLOYMENT' }
             ]
           },

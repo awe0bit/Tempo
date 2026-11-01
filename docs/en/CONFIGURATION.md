@@ -41,26 +41,20 @@ iOS supports Simplified Chinese and English and follows the system language. To 
 
 ## Multi-device sync
 
-Skip this section if you use one device. Otherwise, [deploy your own sync service](DEPLOYMENT.md) first.
+Skip this section if you use one device. Otherwise, [deploy your sync service](DEPLOYMENT.md) and [generate a server pairing QR code](PAIRING.md).
 
-Open **Settings → Self-hosted sync** on each device:
+1. Generate a QR code in the server terminal.
+2. On iOS, open **Settings → Self-hosted Sync → Scan to pair**.
+3. Allow camera access and scan the code.
+4. Check the displayed server address, then confirm pairing.
 
-| Field | Value |
-| --- | --- |
-| Server URL | HTTPS base URL, such as `https://sync.example.com` |
-| Device name | A distinct name, such as iPhone, Mac, or Windows-PC |
-| Verification key | The full 64-character token generated during deployment |
-| Automatic sync | Enable if needed |
+The app verifies the connection, saves the configuration, and starts syncing. There is no manual server or token entry, and the app cannot generate pairing codes. A code is valid for 5 minutes and one use only. Generate a new code on the server for each additional device.
 
-Use the same URL and token on every device, but different device names. Do not append `/v1/sync` or `/health`.
+After pairing, view the current connection, adjust automatic sync, or sync now. To change servers, scan a new code. Confirm carefully: local data will be merged with the new server using the sync rules.
 
-The current iOS page has three separate actions:
+Older iOS builds must be updated to support the scanner. Existing connections are preserved when page content updates. QR support on other platforms depends on the installed client.
 
-1. **Test connection:** checks the entered details without saving them.
-2. **Save configuration:** saves your settings. Leave an already-saved token blank to keep it.
-3. **Sync now:** runs one sync so you can check the result.
-
-With automatic sync enabled, edits are saved locally before being uploaded. Queued changes upload when the connection returns. iOS may suspend the app in the background; it catches up in the foreground rather than staying continuously online.
+iOS may suspend the app in the background and catch up when it becomes active.
 
 ## AI assistant
 
@@ -93,8 +87,8 @@ Keep your app identity and signing setup for in-place updates. Do not uninstall 
 | Problem | Check first |
 | --- | --- |
 | Cannot find Pomodoro or RSS | Open Tools in the current iOS app |
-| Sync connection fails | HTTPS URL, full token, server availability; save after testing |
-| Tasks are missing on another device | Matching URL and token, automatic sync enabled |
+| QR pairing fails | Updated server, a fresh unused code, and network availability |
+| Tasks are missing on another device | Both devices paired to the same server, automatic sync enabled |
 | RSS refresh fails | A valid feed URL that does not require a login |
 | AI connection fails | API URL, model access, key permissions, and service quota |
 | Widgets or Dynamic Island are unavailable | System permissions and complete app/extension signing |
