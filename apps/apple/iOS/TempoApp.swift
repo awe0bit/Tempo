@@ -48,6 +48,7 @@ private struct TempoStartupView: View {
   @State private var showingLaunchExperience = true
   @State private var contentVisibility = 0.0
   @State private var runtimeReady = false
+  @State private var selection = AppTab.today
   @AppStorage(TempoPreferenceKey.appearance) private var appearance = "system"
 
   var body: some View {
@@ -56,7 +57,8 @@ private struct TempoStartupView: View {
       if contentMounted {
         iOSRootView(
           showingLaunchExperience: showingLaunchExperience,
-          launchContentVisibility: contentVisibility
+          launchContentVisibility: contentVisibility,
+          selection: $selection
         )
         .environmentObject(services.store)
         .environmentObject(services.rssStore)
@@ -78,6 +80,18 @@ private struct TempoStartupView: View {
     .onReceive(NotificationCenter.default.publisher(for: .tempoRuntimeReady)) { _ in
       runtimeReady = true
     }
+    // Cold-launch URLs may arrive before services/content are mounted.
+    .onOpenURL { url in
+      switch url.host {
+      case "today": selection = .today
+      case "inbox": selection = .inbox
+      case "pomodoro": selection = .pomodoro
+      case "rss": selection = .rss
+      case "tools": selection = .tools
+      case "settings": selection = .settings
+      default: selection = .today
+      }
+    }
     .preferredColorScheme(appearance == "light" ? .light : appearance == "dark" ? .dark : nil)
   }
 }
@@ -85,12 +99,12 @@ private struct TempoStartupView: View {
 private struct iOSRootView: View {
   let showingLaunchExperience: Bool
   let launchContentVisibility: Double
+  @Binding var selection: AppTab
   @EnvironmentObject private var store: AppStore
   @EnvironmentObject private var updateChecker: AppUpdateChecker
   @EnvironmentObject private var rssStore: RSSStore
   @Environment(\.openURL) private var openURL
   @Environment(\.scenePhase) private var scenePhase
-  @State private var selection = AppTab.today
   @State private var availableUpdate: TempoRelease?
   @State private var runtimeNavigationDepth = 0
   @State private var runtimeTabVisibility: CGFloat = 1
@@ -140,24 +154,9 @@ private struct iOSRootView: View {
     .onChange(of: scenePhase) { phase in
       if phase == .active {
         consumePendingWidgetDestination()
-        Task {
-          await store.syncNow()
-          await rssStore.syncNow()
-          await rssStore.refreshIfNeeded()
-        }
+        refreshActiveScene()
       } else if phase == .background {
         RSSBackgroundRefresh.schedule()
-      }
-    }
-    .onOpenURL { url in
-      switch url.host {
-      case "today": selection = .today
-      case "inbox": selection = .inbox
-      case "pomodoro": selection = .pomodoro
-      case "rss": selection = .rss
-      case "tools": selection = .tools
-      case "settings": selection = .settings
-      default: selection = .today
       }
     }
     .alert(item: $availableUpdate) { release in
@@ -194,7 +193,17 @@ private struct iOSRootView: View {
         updateChecker: updateChecker
       )
       consumePendingWidgetDestination()
+      // The scene can already be active when deferred content first mounts.
+      if scenePhase == .active { refreshActiveScene() }
       RSSBackgroundRefresh.schedule()
+    }
+  }
+
+  private func refreshActiveScene() {
+    Task {
+      await store.syncNow()
+      await rssStore.syncNow()
+      await rssStore.refreshIfNeeded()
     }
   }
 
